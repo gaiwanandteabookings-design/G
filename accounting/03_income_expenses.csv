@@ -1,5 +1,0 @@
-No,Date,Type,Category,Description,Income (USD),Expense (USD),Payment method,Document,Note
-1,2026-02-01,Income,Booking,Tea ceremony booking (4 guests),120.00,0.00,Card,Booking #B-001,Sample row
-2,2026-02-01,Expense,Inventory,Tea leaves restock,0.00,60.00,Card,Invoice #A-70,Sample row
-3,2026-02-03,Income,Retail,Gaiwan sold,36.00,0.00,Cash,Receipt #2001,Sample row
-4,2026-02-05,Expense,Utilities,Electricity,0.00,45.00,Bank transfer,Bill #U-02,Sample row

@@ -1,8 +1,0 @@
-No,Date,Category,Item,Qty,Unit price (USD),Amount (USD),Type,Document,Payment method,Note
-1,2026-01-15,Equipment,Electric tea kettle (variable temp),2,85.00,170.00,CAPEX,Receipt #1001,Card,Sample row — replace with your data
-2,2026-01-16,Teaware,Gaiwan (porcelain) premium,10,18.00,180.00,Inventory,Receipt #1002,Card,Sample row
-3,2026-01-18,Furniture,Tea table + cushions,3,120.00,360.00,CAPEX,Invoice #A-44,Bank transfer,Sample row
-4,2026-01-20,Renovation,Wall paint + lighting,1,650.00,650.00,Sunk cost,Contract #7,Cash,Sample row — non-recoverable
-5,2026-01-22,Registration,Business license & permits,1,300.00,300.00,Sunk cost,Gov. receipt,Bank transfer,Sample row
-6,2026-01-25,Inventory,Tea leaves (assorted, kg),5,40.00,200.00,Inventory,Invoice #A-51,Card,Sample row
-7,2026-01-28,Marketing,Launch advertising,1,250.00,250.00,Sunk cost,Receipt #1010,Card,Sample row
