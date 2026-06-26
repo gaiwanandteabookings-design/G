@@ -1,0 +1,4 @@
+No,Date,Document type,Document number,Counterparty,Amount (USD),Related to,Stored (location/link),Note
+1,2026-01-15,Receipt,1001,Kettle Supplier Co.,170.00,Startup investments #1,/docs/receipts/1001.pdf,Sample row
+2,2026-01-18,Invoice,A-44,Furniture Maker LLC,360.00,Startup investments #3,/docs/invoices/A-44.pdf,Sample row
+3,2026-01-22,Government receipt,GOV-2026,City Licensing Office,300.00,Startup investments #5,/docs/permits/license.pdf,Sample row
