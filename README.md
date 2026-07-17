@@ -1,8 +1,10 @@
-# ColdChain305 — Commercial Walk-In Cooler & Freezer Repair Website
+# ProFix305 — Commercial Equipment Repair Website
 
 Marketing site + booking system for a South Florida (Miami-Dade, Broward, Palm Beach)
-commercial walk-in cooler/freezer repair business. Modern responsive frontend, plus a
-small Express/SQLite backend that captures booking requests from the site's form.
+commercial equipment repair business covering refrigeration (walk-in coolers/freezers,
+reach-ins, display cases), HVAC/AC, ice machines, and kitchen equipment. Modern
+responsive frontend, plus a small Express/SQLite backend that captures booking requests
+from the site's form.
 
 ## Stack
 
@@ -45,10 +47,10 @@ git-ignored). View/manage them at `http://localhost:3000/admin.html` using the
 The content was written from scratch (not copied from any reference site) but ships
 with **placeholder business details** that must be replaced before launch:
 
-- **Phone number / email** — currently `(305) 555-0199` / `booking@coldchain305.com`,
+- **Phone number / email** — currently `(305) 555-0199` / `booking@profix305.com`,
   used throughout `index.html`, `admin.html`, and `mailer.js` defaults. Search and
   replace with the real business number and inbox.
-- **Business name / domain** — `ColdChain305` / `coldchain305.com` (also used in the
+- **Business name / domain** — `ProFix305` / `profix305.com` (also used in the
   JSON-LD structured data block and Open Graph tags in `index.html`).
 - **License number** in the footer (`License #CACXXXXXXX (placeholder)`).
 - **Testimonials** — the three review cards in the "Reviews" section are sample

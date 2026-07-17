@@ -1,7 +1,7 @@
 {
-  "name": "coldchain305-server",
+  "name": "profix305-server",
   "version": "1.0.0",
-  "description": "ColdChain305 - commercial walk-in cooler & freezer repair website (frontend + booking API)",
+  "description": "ProFix305 - commercial equipment repair website (refrigeration, HVAC, kitchen equipment; frontend + booking API)",
   "private": true,
   "main": "server.js",
   "scripts": {

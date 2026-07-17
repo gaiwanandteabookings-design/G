@@ -13,7 +13,7 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 app.use(express.json({ limit: '20kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const EQUIPMENT_TYPES = new Set(['walk-in-cooler', 'walk-in-freezer', 'both', 'other']);
+const EQUIPMENT_TYPES = new Set(['refrigeration', 'hvac', 'ice-machine', 'kitchen-equipment', 'other']);
 const URGENCY_LEVELS = new Set(['emergency', 'this-week', 'scheduled']);
 
 // Простая защита от спама/перебора: не более 5 заявок с одного IP за 10 минут.
@@ -128,7 +128,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`ColdChain305 server running on http://localhost:${PORT}`);
+  console.log(`ProFix305 server running on http://localhost:${PORT}`);
   if (!ADMIN_TOKEN) {
     console.warn('[warn] ADMIN_TOKEN не задан в .env — страница /admin.html не будет работать.');
   }
