@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ColdChain305 — Booking Leads (Admin)</title>
+<meta name="robots" content="noindex, nofollow" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0c1b2e; --ink:#0b1220; --cyan:#35d0e0; --slate:#5a6b82; --ice:#f4faff;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--ice); margin:0; color: var(--ink); }
+  header { background: var(--navy); color:#fff; padding: 18px 28px; display:flex; align-items:center; justify-content:space-between; }
+  header h1 { font-family:'Space Grotesk',sans-serif; font-size:1.15rem; margin:0; }
+  header h1 em { color: var(--cyan); font-style: normal; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px; }
+  .gate { max-width: 380px; margin: 80px auto; background:#fff; padding:28px; border-radius:14px; box-shadow:0 10px 30px -12px rgba(12,27,46,.2); }
+  .gate h2 { margin-top:0; font-family:'Space Grotesk',sans-serif; }
+  .gate input { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid #d5dee8; margin:10px 0 16px; font-size:.95rem; }
+  .gate button, .toolbar button { background: var(--cyan); border:none; color: var(--navy); font-weight:700; padding:10px 16px; border-radius:999px; cursor:pointer; }
+  .hidden { display:none !important; }
+  .toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; }
+  table { width:100%; border-collapse: collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px -12px rgba(12,27,46,.15); }
+  th, td { text-align:left; padding:12px 14px; font-size:.85rem; border-bottom:1px solid #edf1f6; vertical-align: top; }
+  th { background: var(--navy); color:#fff; font-weight:600; position: sticky; top:0; }
+  tr:last-child td { border-bottom:none; }
+  .badge { padding:3px 9px; border-radius:999px; font-size:.72rem; font-weight:700; }
+  .badge.emergency { background:#ffe3d1; color:#b34700; }
+  .badge.this-week { background:#fff4cf; color:#8a6d00; }
+  .badge.scheduled { background:#dff5e6; color:#1a8f5e; }
+  select.status { padding:5px 8px; border-radius:6px; border:1px solid #d5dee8; font-size:.8rem; }
+  .empty { text-align:center; padding: 60px 20px; color: var(--slate); }
+  .error { color:#d64545; font-size:.85rem; margin-top:6px; }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <h2>Admin Login</h2>
+  <p style="color:var(--slate); font-size:.88rem;">Enter the admin token from your server <code>.env</code> file.</p>
+  <input type="password" id="token-input" placeholder="Admin token" />
+  <button id="gate-submit">View Leads</button>
+  <p class="error hidden" id="gate-error">Invalid token.</p>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>ColdChain<em>305</em> — Booking Leads</h1>
+    <button id="logout" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 14px;border-radius:999px;">Log out</button>
+  </header>
+  <main>
+    <div class="toolbar">
+      <span id="count" style="color:var(--slate); font-size:.9rem;"></span>
+      <button id="refresh">Refresh</button>
+    </div>
+    <div id="table-wrap"></div>
+  </main>
+</div>
+
+<script>
+(function () {
+  const gate = document.getElementById('gate');
+  const app = document.getElementById('app');
+  const tokenInput = document.getElementById('token-input');
+  const gateError = document.getElementById('gate-error');
+
+  function getToken() { return sessionStorage.getItem('cc305_admin_token') || ''; }
+  function setToken(t) { sessionStorage.setItem('cc305_admin_token', t); }
+  function clearToken() { sessionStorage.removeItem('cc305_admin_token'); }
+
+  async function loadBookings() {
+    const token = getToken();
+    const res = await fetch('/api/bookings', { headers: { 'X-Admin-Token': token } });
+    if (!res.ok) {
+      clearToken();
+      showGate('Invalid token.');
+      return;
+    }
+    const data = await res.json();
+    renderTable(data.bookings || []);
+  }
+
+  function urgencyBadge(u) {
+    const label = u === 'emergency' ? 'Emergency' : u === 'this-week' ? 'This Week' : 'Scheduled';
+    return `<span class="badge ${u}">${label}</span>`;
+  }
+
+  function renderTable(bookings) {
+    document.getElementById('count').textContent = `${bookings.length} lead${bookings.length === 1 ? '' : 's'}`;
+    const wrap = document.getElementById('table-wrap');
+    if (!bookings.length) {
+      wrap.innerHTML = '<div class="empty">No booking requests yet.</div>';
+      return;
+    }
+    const rows = bookings.map((b) => `
+      <tr>
+        <td>#${b.id}<br><small>${new Date(b.created_at).toLocaleString()}</small></td>
+        <td>${b.name}<br><small>${b.business_name || ''}</small></td>
+        <td><a href="tel:${b.phone}">${b.phone}</a>${b.email ? `<br><a href="mailto:${b.email}">${b.email}</a>` : ''}</td>
+        <td>${b.address}</td>
+        <td>${b.equipment_type}</td>
+        <td>${urgencyBadge(b.urgency)}<br><small>${b.preferred_date || ''} ${b.preferred_time || ''}</small></td>
+        <td style="max-width:220px;">${b.issue_description}</td>
+        <td>
+          <select class="status" data-id="${b.id}">
+            ${['new','contacted','scheduled','completed','cancelled'].map((s) => `<option value="${s}" ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </td>
+      </tr>
+    `).join('');
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr><th>ID / Date</th><th>Name</th><th>Contact</th><th>Address</th><th>Equipment</th><th>Urgency</th><th>Issue</th><th>Status</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    wrap.querySelectorAll('.status').forEach((sel) => {
+      sel.addEventListener('change', async () => {
+        const id = sel.getAttribute('data-id');
+        await fetch(`/api/bookings/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': getToken() },
+          body: JSON.stringify({ status: sel.value }),
+        });
+      });
+    });
+  }
+
+  function showGate(errorMsg) {
+    app.classList.add('hidden');
+    gate.classList.remove('hidden');
+    gateError.classList.toggle('hidden', !errorMsg);
+  }
+
+  function showApp() {
+    gate.classList.add('hidden');
+    app.classList.remove('hidden');
+    loadBookings();
+  }
+
+  document.getElementById('gate-submit').addEventListener('click', () => {
+    const val = tokenInput.value.trim();
+    if (!val) return;
+    setToken(val);
+    showApp();
+  });
+  tokenInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('gate-submit').click();
+  });
+  document.getElementById('logout').addEventListener('click', () => {
+    clearToken();
+    showGate('');
+  });
+  document.getElementById('refresh').addEventListener('click', loadBookings);
+
+  if (getToken()) showApp(); else showGate('');
+})();
+</script>
+</body>
+</html>
