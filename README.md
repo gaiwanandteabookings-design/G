@@ -1,10 +1,12 @@
 # ProFix305 — Commercial Equipment Repair Website
 
-Marketing site + booking system for a South Florida (Miami-Dade, Broward, Palm Beach)
-commercial equipment repair business covering refrigeration (walk-in coolers/freezers,
-reach-ins, display cases), HVAC/AC, ice machines, commercial mixers, exhaust hoods, and
-kitchen equipment. Modern responsive frontend, server-rendered per-service landing pages
-for SEO, and a small Express/SQLite backend that captures booking requests.
+Marketing site + booking/invoicing system for a South Florida (Miami-Dade, Broward, Palm
+Beach) commercial equipment repair business covering refrigeration (walk-in
+coolers/freezers, reach-ins, display cases), HVAC/AC, ice machines, commercial mixers,
+exhaust hoods, and kitchen equipment. Modern responsive frontend, server-rendered
+per-service landing pages for SEO, and a small Express/SQLite backend that captures
+booking requests and lets you create and email professional PDF invoices from a
+username/password-protected admin panel.
 
 ## Stack
 
@@ -13,27 +15,36 @@ for SEO, and a small Express/SQLite backend that captures booking requests.
 - **Backend:** Node.js + Express, `server/server.js`.
 - **Database:** SQLite via Node's built-in `node:sqlite` module — no external DB or native
   build step required (Node 22.5+).
-- **Email notifications:** optional, via `nodemailer` + your own SMTP credentials.
+- **Email notifications & invoices:** optional, via `nodemailer` + your own SMTP
+  credentials — same credentials power booking notifications and invoice emails.
+- **PDF invoices:** generated server-side with `pdfkit` (pure JS, no native build step).
 
 ## Project layout
 
 ```
 server/
-  server.js            Express app, API routes, page routes, sitemap.xml, 404 handler
-  db.js                SQLite schema + queries
-  mailer.js            booking notification (to you) + confirmation email (to customer)
+  server.js            Express app, page routes, sitemap.xml, 404 handler
+  auth.js              admin username/password login + session tokens (in-memory)
+  db.js                SQLite schema + queries (bookings + invoices)
+  invoiceUtils.js       invoice number formatting, totals math — shared by API/PDF/email/view
+  pdf.js               renders a branded invoice PDF (pdfkit)
+  mailer.js            booking notifications, booking confirmation, invoice emails
+  routes/
+    invoices.js         admin-only invoice API (create/list/get/pdf/send/status)
   .env.example         copy to .env and fill in real values
   views/
     layout.js          shared <head>/header/footer wrapper for every page (brand, phone,
                         email, GA4 snippet — edit constants here to rebrand the whole site)
     servicePage.js      builds one service landing page from a service definition
     legalPage.js         builds Privacy Policy / Terms of Service pages
+    invoiceView.js        builds the customer-facing invoice page
+    icons.js              hand-drawn SVG icon set used across the site
   content/
     home.js             homepage copy + meta
     services.js          the 6 service definitions (edit this to add/change a service)
     legal.js              Privacy Policy / Terms of Service text
   public/
-    admin.html           token-gated page to view/manage booking leads
+    admin.html           login-protected panel: bookings + invoices (create, send, track)
     robots.txt
     favicon.ico
     images/og-cover.jpg   social share preview image
@@ -50,7 +61,7 @@ card are generated automatically.
 
 ```bash
 cd server
-cp .env.example .env   # edit ADMIN_TOKEN (and SMTP settings if you want email alerts)
+cp .env.example .env   # edit ADMIN_USERNAME/ADMIN_PASSWORD (and SMTP settings for email)
 npm install
 npm start               # http://localhost:3000
 ```
@@ -61,20 +72,32 @@ Pages: `/`, `/miami/commercial-refrigeration-repair/`, `/miami/commercial-hvac-a
 `/privacy-policy/`, `/terms-of-service/`, plus `/sitemap.xml` and `/robots.txt`. Unknown
 URLs get a branded 404 page instead of Express's default error page.
 
-Booking requests submitted on the site are stored in `server/data/bookings.db` (SQLite,
-git-ignored). View/manage them at `http://localhost:3000/admin.html` using the
-`ADMIN_TOKEN` from your `.env`.
+Booking requests and invoices are stored in `server/data/bookings.db` (SQLite,
+git-ignored). Manage both at `http://localhost:3000/admin.html`, signing in with
+`ADMIN_USERNAME` / `ADMIN_PASSWORD` from your `.env` (defaults: `profix305` / `1234` —
+**change this before going live**, see the security note below). From there you can:
+- View and update booking request statuses
+- Create a professional PDF invoice from scratch, or one click from an existing booking
+  (pre-fills the customer's name/phone/address)
+- Send it by email (PDF attached) straight from the browser, or save as a draft first
+- Track status (draft / sent / paid / void) and resend or mark paid any time
+- Every invoice also gets a shareable customer-facing link
+  (`/invoice/<unguessable-id>/`) with a "Download PDF" button, in case the email bounces
+  or they want it again later
 
 ## Before going live — replace these placeholders
 
 The content was written from scratch (not copied from any reference site) but ships
 with **placeholder business details** that must be replaced before launch:
 
-- **Phone number / email** — currently `(305) 555-0199` / `booking@profix305.com`, set
-  once in `server/views/layout.js` (`PHONE_DISPLAY`, `PHONE_TEL`, `EMAIL`) and reused
-  everywhere. `server/mailer.js` defaults come from `.env`.
-- **Business name / domain** — `ProFix305` / `profix305.com`, also set in
-  `server/views/layout.js` (`SITE_NAME`, `SITE_URL`) and used in JSON-LD/Open Graph tags.
+- **Phone number / email** — real now: `(786) 919-7675` / `profix305@gmail.com`, set once
+  in `server/views/layout.js` (`PHONE_DISPLAY`, `PHONE_TEL`, `EMAIL`) and reused
+  everywhere (site, footer, PDFs, emails, JSON-LD). Still need `SMTP_PASS` (a Gmail App
+  Password, not the account password) set as an env var for anything to actually send —
+  see the SMTP section below.
+- **Business name / domain** — `ProFix305` / still the placeholder `profix305.com` in
+  `server/views/layout.js` (`SITE_NAME`, `SITE_URL`) until a real domain is bought and
+  connected (see Production deployment below).
 - **"Licensed" claims** — deliberately removed from this site (see `content/home.js`,
   `content/services.js`) after checking Florida's DBPR contractor-license database:
   simple repair work may or may not require a Class A/B/C mechanical/AC contractor
@@ -87,10 +110,16 @@ with **placeholder business details** that must be replaced before launch:
   placeholder text, clearly marked with an HTML comment. Replace them with real,
   verifiable customer reviews before launch — publishing fabricated testimonials on a
   commercial site is both a trust issue and a legal risk (FTC endorsement guidelines).
-- **`ADMIN_TOKEN`** in `.env` — set a real random secret, never commit `.env`.
-- **SMTP credentials** in `.env` if you want email alerts on new bookings (both the
-  internal notification to you and the automatic confirmation email to the customer);
-  without them, bookings are still saved to the database, just not emailed.
+- **`ADMIN_USERNAME` / `ADMIN_PASSWORD`** in `.env` — the shipped defaults
+  (`profix305` / `1234`) are a placeholder for development only. A 4-digit numeric
+  password is trivially guessable; there's a per-IP rate limit on the login endpoint
+  (8 attempts / 15 min) as a backstop, but that's not a substitute for a real password.
+  Change both before this site is reachable by the public, and never commit `.env`.
+- **SMTP credentials** in `.env` — required for booking notification emails, booking
+  confirmation emails, *and* sending invoices to customers. Without them, bookings and
+  invoices still save fine, but nothing gets emailed (the admin panel will show a clear
+  error if you try to send an invoice with no SMTP configured, rather than failing
+  silently).
 - **Privacy Policy / Terms of Service** (`content/legal.js`) are a generic starting
   template, not a substitute for review by a Florida-licensed attorney — have them
   checked before relying on them, especially once you're running paid ads.
@@ -105,7 +134,8 @@ This repo includes `render.yaml` at the root, so Render can deploy it automatica
 2. Dashboard → **New +** → **Blueprint**.
 3. Connect your GitHub account and pick this repo/branch.
 4. Render reads `render.yaml` and pre-fills everything (root dir `server`, build/start
-   commands, Node version, a random `ADMIN_TOKEN`) — click **Apply**.
+   commands, Node version, `ADMIN_USERNAME=profix305`, and a strong random
+   `ADMIN_PASSWORD` — not the `1234` dev default) — click **Apply**.
 5. After the first build finishes (a couple minutes), Render gives you a live URL like
    `https://profix305.onrender.com` — open it, that's the real site.
 
@@ -117,8 +147,9 @@ This repo includes `render.yaml` at the root, so Render can deploy it automatica
   every redeploy and periodically on restart. Fine for a demo/preview; before a real
   launch taking real bookings, either add a paid persistent disk in the Render dashboard,
   or point the app at a hosted database instead.
-- Find/regenerate `ADMIN_TOKEN` under the service's **Environment** tab in the Render
-  dashboard to reach `/admin.html`.
+- Find your live `ADMIN_PASSWORD` under the service's **Environment** tab in the Render
+  dashboard (Render generated a random one for you — it's not `1234`) to sign in at
+  `/admin.html`.
 
 ### General checklist (any host)
 
@@ -139,8 +170,10 @@ on almost any Node host. Rough checklist to take it from "runs on my machine" to
    persistent by default.
 3. **Environment variables to set on the host** (mirror of `.env.example`):
    `PORT`, `NODE_ENV=production`, `TRUST_PROXY=true` (if behind Render/Railway/nginx),
-   `ADMIN_TOKEN`, `SMTP_*` + `NOTIFY_EMAIL` + `FROM_EMAIL` (if you want email), and
-   `GA_MEASUREMENT_ID` (if you set up Google Analytics — see below).
+   `ADMIN_USERNAME` + `ADMIN_PASSWORD` (change from the `1234` dev default — see the
+   security note above), `SMTP_*` + `NOTIFY_EMAIL` + `FROM_EMAIL` (needed for booking
+   emails and for sending invoices), and `GA_MEASUREMENT_ID` (if you set up Google
+   Analytics — see below).
 4. **Domain & DNS.** Buy the domain (e.g. from Namecheap, Google Domains successor,
    Cloudflare), then point it at your host: usually an `A` record to the host's IP, or a
    `CNAME` to the hostname the platform gives you (Render/Railway/Fly all document this).
@@ -152,6 +185,17 @@ on almost any Node host. Rough checklist to take it from "runs on my machine" to
 6. **Google Search Console.** Verify your domain at search.google.com/search-console,
    then submit `https://yourdomain.com/sitemap.xml` so all pages get crawled quickly
    instead of waiting for Google to find them on its own.
+7. **SMTP for your new business email.** Once you have a real email address, get SMTP
+   credentials for it and set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` — this is
+   what powers booking notifications and invoice sending. Common setups:
+   - **Google Workspace / Gmail:** `smtp.gmail.com`, port `587`. You need an **App
+     Password** (myaccount.google.com/apppasswords), not your normal login password —
+     Gmail blocks plain-password SMTP logins by default.
+   - **Zoho Mail:** `smtp.zoho.com`, port `587`.
+   - **Microsoft 365 / Outlook:** `smtp.office365.com`, port `587`.
+   - Whatever provider you pick, `SMTP_USER` is the full email address and `FROM_EMAIL`
+     should match it (or be a verified alias) — most providers reject mail sent "from" an
+     address they don't recognize as yours.
 
 ## SEO — what actually moves rankings (read this before asking "why aren't we #1")
 

@@ -1,4 +1,4 @@
-const { SITE_NAME, EMAIL, PHONE_DISPLAY } = require('../views/layout');
+const { SITE_NAME, EMAIL, PHONE_DISPLAY, PHONE_TEL } = require('../views/layout');
 
 const privacyPolicy = {
   slug: 'privacy-policy',
@@ -53,7 +53,7 @@ const privacyPolicy = {
 
     <h3>Contact Us</h3>
     <p>Questions about this policy? Reach us at <a href="mailto:${EMAIL}">${EMAIL}</a> or
-    <a href="tel:+13055550199">${PHONE_DISPLAY}</a>.</p>
+    <a href="tel:${PHONE_TEL}">${PHONE_DISPLAY}</a>.</p>
   `,
 };
 
@@ -102,7 +102,7 @@ const termsOfService = {
 
     <h3>Contact Us</h3>
     <p>Questions about these terms? Reach us at <a href="mailto:${EMAIL}">${EMAIL}</a> or
-    <a href="tel:+13055550199">${PHONE_DISPLAY}</a>.</p>
+    <a href="tel:${PHONE_TEL}">${PHONE_DISPLAY}</a>.</p>
   `,
 };
 

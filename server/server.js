@@ -2,20 +2,23 @@ require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const path = require('node:path');
-const crypto = require('node:crypto');
 
 const db = require('./db');
 const { notifyNewBooking, sendBookingConfirmation, smtpConfigured } = require('./mailer');
-const { renderLayout, SITE_URL } = require('./views/layout');
+const { renderLayout, SITE_URL, PHONE_TEL, PHONE_DISPLAY } = require('./views/layout');
 const { buildServicePage } = require('./views/servicePage');
 const { buildLegalPage } = require('./views/legalPage');
+const { buildInvoiceView } = require('./views/invoiceView');
+const { buildInvoicePdf } = require('./pdf');
+const { invoiceNumber } = require('./invoiceUtils');
 const home = require('./content/home');
 const { services } = require('./content/services');
 const { privacyPolicy, termsOfService } = require('./content/legal');
+const auth = require('./auth');
+const invoiceRoutes = require('./routes/invoices');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Set this env var to true only when the app runs behind a reverse proxy / hosting
@@ -53,6 +56,21 @@ app.get(`/${privacyPolicy.slug}`, (req, res) => {
 
 app.get(`/${termsOfService.slug}`, (req, res) => {
   res.type('html').send(renderLayout(buildLegalPage(termsOfService)));
+});
+
+app.get('/invoice/:publicId', (req, res) => {
+  const invoice = db.getInvoiceByPublicId(req.params.publicId);
+  if (!invoice) return res.status(404).send('Invoice not found');
+  res.type('html').send(renderLayout(buildInvoiceView(invoice)));
+});
+
+app.get('/invoice/:publicId/pdf', async (req, res) => {
+  const invoice = db.getInvoiceByPublicId(req.params.publicId);
+  if (!invoice) return res.status(404).send('Invoice not found');
+  const pdfBuffer = await buildInvoicePdf(invoice);
+  res.set('Content-Type', 'application/pdf');
+  res.set('Content-Disposition', `inline; filename="${invoiceNumber(invoice.id)}.pdf"`);
+  res.send(pdfBuffer);
 });
 
 app.get('/sitemap.xml', (req, res) => {
@@ -153,21 +171,30 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
-function requireAdmin(req, res, next) {
-  const token = req.headers['x-admin-token'] || req.query.token || '';
-  const provided = Buffer.from(String(token));
-  const expected = Buffer.from(ADMIN_TOKEN);
-  if (!ADMIN_TOKEN || provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
-    return res.status(401).json({ ok: false, error: 'Unauthorized' });
+app.post('/api/admin/login', (req, res) => {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+  if (auth.isLoginRateLimited(ip)) {
+    return res.status(429).json({ ok: false, error: 'Too many login attempts. Try again later.' });
   }
-  next();
-}
+  const { username, password } = req.body || {};
+  if (!auth.verifyLogin(username, password)) {
+    return res.status(401).json({ ok: false, error: 'Invalid username or password.' });
+  }
+  const token = auth.createSession();
+  res.json({ ok: true, token });
+});
 
-app.get('/api/bookings', requireAdmin, (req, res) => {
+app.post('/api/admin/logout', auth.requireAdmin, (req, res) => {
+  const token = req.headers['x-admin-token'] || req.query.token || '';
+  auth.destroySession(token);
+  res.json({ ok: true });
+});
+
+app.get('/api/bookings', auth.requireAdmin, (req, res) => {
   res.json({ ok: true, bookings: db.listBookings() });
 });
 
-app.patch('/api/bookings/:id/status', requireAdmin, (req, res) => {
+app.patch('/api/bookings/:id/status', auth.requireAdmin, (req, res) => {
   const id = Number(req.params.id);
   const status = cleanString(req.body?.status, 30);
   const allowed = new Set(['new', 'contacted', 'scheduled', 'completed', 'cancelled']);
@@ -178,6 +205,8 @@ app.patch('/api/bookings/:id/status', requireAdmin, (req, res) => {
   if (!updated) return res.status(404).json({ ok: false, error: 'Заявка не найдена' });
   res.json({ ok: true });
 });
+
+app.use('/api/invoices', invoiceRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, smtpConfigured });
@@ -192,7 +221,7 @@ app.use((req, res) => {
       <p>The page you're looking for doesn't exist or may have moved. Try one of the links below, or call us directly.</p>
       <div class="hero-cta">
         <a href="/" class="btn btn-primary btn-lg">Back to Home</a>
-        <a href="tel:+13055550199" class="btn btn-outline btn-lg" style="border-color: var(--color-navy-700); color: var(--color-navy-800);">Call (305) 555-0199</a>
+        <a href="tel:${PHONE_TEL}" class="btn btn-outline btn-lg" style="border-color: var(--color-navy-700); color: var(--color-navy-800);">Call ${PHONE_DISPLAY}</a>
       </div>
     </div>
   </section>
@@ -209,8 +238,8 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`ProFix305 server running on http://localhost:${PORT}`);
-  if (!ADMIN_TOKEN) {
-    console.warn('[warn] ADMIN_TOKEN не задан в .env — страница /admin.html не будет работать.');
+  if (!auth.ADMIN_USERNAME || !auth.ADMIN_PASSWORD) {
+    console.warn('[warn] ADMIN_USERNAME/ADMIN_PASSWORD не заданы в .env — вход в /admin.html не будет работать.');
   }
   if (!smtpConfigured) {
     console.warn('[warn] SMTP не настроен — email-уведомления о заявках отключены (заявки всё равно сохраняются в БД).');

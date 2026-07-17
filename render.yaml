@@ -13,5 +13,7 @@ services:
         value: production
       - key: TRUST_PROXY
         value: "true"
-      - key: ADMIN_TOKEN
+      - key: ADMIN_USERNAME
+        value: profix305
+      - key: ADMIN_PASSWORD
         generateValue: true

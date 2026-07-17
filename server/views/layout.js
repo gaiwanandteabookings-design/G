@@ -2,9 +2,9 @@ const FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' vi
 
 const SITE_NAME = 'ProFix305';
 const SITE_URL = 'https://www.profix305.com';
-const PHONE_DISPLAY = '(305) 555-0199';
-const PHONE_TEL = '+13055550199';
-const EMAIL = 'booking@profix305.com';
+const PHONE_DISPLAY = '(786) 919-7675';
+const PHONE_TEL = '+17869197675';
+const EMAIL = 'profix305@gmail.com';
 const GA_MEASUREMENT_ID = process.env.GA_MEASUREMENT_ID || '';
 
 function analytics() {
@@ -106,7 +106,7 @@ function footer() {
 </a>`;
 }
 
-function renderLayout({ title, description, keywords, canonical, ogTitle, ogDescription, jsonLd, bodyHtml }) {
+function renderLayout({ title, description, keywords, canonical, ogTitle, ogDescription, jsonLd, extraHead, bodyHtml }) {
   const canonicalUrl = `${SITE_URL}${canonical}`;
   return `<!DOCTYPE html>
 <html lang="en">
@@ -134,7 +134,7 @@ ${keywords ? `<meta name="keywords" content="${keywords}" />\n` : ''}<link rel="
 
 <link rel="stylesheet" href="/css/styles.css" />
 <link rel="icon" href="${FAVICON}" />
-${jsonLd ? `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>\n` : ''}${analytics()}
+${jsonLd ? `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>\n` : ''}${extraHead || ''}${analytics()}
 </head>
 <body>
 

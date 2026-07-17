@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { PHONE_DISPLAY } = require('./views/layout');
 
 const smtpConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 
@@ -63,7 +64,7 @@ async function sendBookingConfirmation(booking) {
     `Urgency: ${booking.urgency}`,
     `Issue: ${booking.issue_description}`,
     ``,
-    `If this is an active emergency, you can also call us directly at (305) 555-0199.`,
+    `If this is an active emergency, you can also call us directly at ${PHONE_DISPLAY}.`,
     ``,
     `— ProFix305`,
   ];
@@ -80,4 +81,50 @@ async function sendBookingConfirmation(booking) {
   }
 }
 
-module.exports = { notifyNewBooking, sendBookingConfirmation, smtpConfigured };
+async function sendInvoiceEmail(invoice, pdfBuffer, viewUrl) {
+  if (!transporter) {
+    return { ok: false, error: 'SMTP is not configured on the server yet — set SMTP_* env vars.' };
+  }
+  if (!invoice.customer_email) {
+    return { ok: false, error: 'This invoice has no customer email address on file.' };
+  }
+
+  const { invoiceNumber, computeTotals, formatMoney } = require('./invoiceUtils');
+  const { total } = computeTotals(invoice.line_items, invoice.tax_rate);
+  const num = invoiceNumber(invoice.id);
+
+  const lines = [
+    `Hi ${invoice.customer_name},`,
+    ``,
+    `Please find your invoice ${num} from ProFix305 attached (PDF), for a total of ${formatMoney(total)}.`,
+    ``,
+    `You can also view it online here: ${viewUrl}`,
+    ``,
+    invoice.notes ? `Notes: ${invoice.notes}\n` : '',
+    `Questions about this invoice? Reply to this email or call us at ${PHONE_DISPLAY}.`,
+    ``,
+    `— ProFix305`,
+  ].filter(Boolean);
+
+  try {
+    await transporter.sendMail({
+      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
+      to: invoice.customer_email,
+      subject: `Invoice ${num} from ProFix305 — ${formatMoney(total)} due`,
+      text: lines.join('\n'),
+      attachments: [
+        {
+          filename: `${num}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ],
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error('[mailer] Не удалось отправить инвойс:', err.message);
+    return { ok: false, error: 'Failed to send email — check SMTP settings.' };
+  }
+}
+
+module.exports = { notifyNewBooking, sendBookingConfirmation, sendInvoiceEmail, smtpConfigured };

@@ -1,4 +1,5 @@
 const { PHONE_TEL, PHONE_DISPLAY, EMAIL, SITE_URL } = require('../views/layout');
+const { renderServiceIcon } = require('../views/icons');
 const { services } = require('./services');
 
 const meta = {
@@ -35,13 +36,15 @@ const meta = {
       itemOffered: { '@type': 'Service', name: s.serviceName, url: `${SITE_URL}/miami/${s.slug}/` },
     })),
   },
+  extraHead: `<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>`,
 };
 
 const serviceCards = services
   .map(
     (s) => `
         <article class="card service-card">
-          <div class="card-icon">${s.icon}</div>
+          <div class="card-icon">${renderServiceIcon(s.slug)}</div>
           <h3>${s.cardTitle}</h3>
           <p>${s.cardBlurb}</p>
           <a class="card-link" href="/miami/${s.slug}/">Learn more →</a>
@@ -72,12 +75,12 @@ const bodyHtml = `
         <div class="hero-card hero-card-temp">
           <span class="label">Unit Status</span>
           <span class="value">Online</span>
-          <span class="status status-ok">Running normal</span>
+          <span class="status status-ok"><i class="pulse-dot"></i>Running normal</span>
         </div>
         <div class="hero-card hero-card-eta">
           <span class="label">Next Available Tech</span>
           <span class="value">Today</span>
-          <span class="status">South Florida</span>
+          <span class="status" id="local-time">South Florida</span>
         </div>
         <div class="hero-glow"></div>
       </div>
@@ -174,6 +177,8 @@ const bodyHtml = `
         <p class="section-sub">Our technicians cover the full tri-county corridor, so wherever your kitchen, market, hotel, or warehouse sits between Homestead and Jupiter, help isn't far away.</p>
       </div>
 
+      <div id="service-map" data-map role="img" aria-label="Map of the ProFix305 service area across Miami-Dade, Broward, and Palm Beach counties"></div>
+
       <div class="grid service-area-grid">
         <div class="area-card">
           <h3>Miami-Dade</h3>
@@ -200,22 +205,31 @@ const bodyHtml = `
       </div>
 
       <!-- SAMPLE PLACEHOLDER REVIEWS — replace with real, verifiable customer reviews before launch. -->
-      <div class="grid reviews-grid">
-        <blockquote class="review-card">
-          <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
-          <p>"Our walk-in cooler failed on a Friday night rush. Tech was on-site within a couple of hours and had us back up before the weekend."</p>
-          <footer>— Restaurant Manager, Miami</footer>
-        </blockquote>
-        <blockquote class="review-card">
-          <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
-          <p>"AC went out in the middle of a heat wave. They had a tech out same day and were upfront about pricing the whole time."</p>
-          <footer>— Property Manager, Fort Lauderdale</footer>
-        </blockquote>
-        <blockquote class="review-card">
-          <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
-          <p>"We put our fridges, ice machine, and ovens all on one maintenance plan with them. Haven't had an emergency call since."</p>
-          <footer>— Facilities Manager, West Palm Beach</footer>
-        </blockquote>
+      <div class="reviews-carousel" id="reviews-carousel">
+        <div class="reviews-track">
+          <div class="review-slide">
+            <blockquote class="review-card">
+              <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+              <p>"Our walk-in cooler failed on a Friday night rush. Tech was on-site within a couple of hours and had us back up before the weekend."</p>
+              <footer>— Restaurant Manager, Miami</footer>
+            </blockquote>
+          </div>
+          <div class="review-slide">
+            <blockquote class="review-card">
+              <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+              <p>"AC went out in the middle of a heat wave. They had a tech out same day and were upfront about pricing the whole time."</p>
+              <footer>— Property Manager, Fort Lauderdale</footer>
+            </blockquote>
+          </div>
+          <div class="review-slide">
+            <blockquote class="review-card">
+              <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+              <p>"We put our fridges, ice machine, and ovens all on one maintenance plan with them. Haven't had an emergency call since."</p>
+              <footer>— Facilities Manager, West Palm Beach</footer>
+            </blockquote>
+          </div>
+        </div>
+        <div class="reviews-dots" role="tablist" aria-label="Reviews"></div>
       </div>
     </div>
   </section>
