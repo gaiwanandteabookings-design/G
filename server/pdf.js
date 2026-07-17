@@ -1,5 +1,6 @@
 const PDFDocument = require('pdfkit');
 const { invoiceNumber, computeTotals, formatMoney } = require('./invoiceUtils');
+const { PHONE_DISPLAY, EMAIL } = require('./views/layout');
 
 const NAVY = '#0c1b2e';
 const CYAN = '#0e9bab'; // darker cyan for print/paper contrast
@@ -28,7 +29,7 @@ function buildInvoicePdf(invoice) {
       .fontSize(9)
       .fillColor(SLATE)
       .text('Commercial Equipment Repair — Miami to Palm Beach', 50, 78)
-      .text('(305) 555-0199  •  booking@profix305.com', 50, 91);
+      .text(`${PHONE_DISPLAY}  •  ${EMAIL}`, 50, 91);
 
     doc.font('Helvetica-Bold').fontSize(20).fillColor(NAVY).text('INVOICE', 380, 50, { width: 165, align: 'right' });
     doc

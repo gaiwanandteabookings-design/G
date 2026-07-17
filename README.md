@@ -90,11 +90,14 @@ git-ignored). Manage both at `http://localhost:3000/admin.html`, signing in with
 The content was written from scratch (not copied from any reference site) but ships
 with **placeholder business details** that must be replaced before launch:
 
-- **Phone number / email** — currently `(305) 555-0199` / `booking@profix305.com`, set
-  once in `server/views/layout.js` (`PHONE_DISPLAY`, `PHONE_TEL`, `EMAIL`) and reused
-  everywhere. `server/mailer.js` defaults come from `.env`.
-- **Business name / domain** — `ProFix305` / `profix305.com`, also set in
-  `server/views/layout.js` (`SITE_NAME`, `SITE_URL`) and used in JSON-LD/Open Graph tags.
+- **Phone number / email** — real now: `(786) 919-7675` / `profix305@gmail.com`, set once
+  in `server/views/layout.js` (`PHONE_DISPLAY`, `PHONE_TEL`, `EMAIL`) and reused
+  everywhere (site, footer, PDFs, emails, JSON-LD). Still need `SMTP_PASS` (a Gmail App
+  Password, not the account password) set as an env var for anything to actually send —
+  see the SMTP section below.
+- **Business name / domain** — `ProFix305` / still the placeholder `profix305.com` in
+  `server/views/layout.js` (`SITE_NAME`, `SITE_URL`) until a real domain is bought and
+  connected (see Production deployment below).
 - **"Licensed" claims** — deliberately removed from this site (see `content/home.js`,
   `content/services.js`) after checking Florida's DBPR contractor-license database:
   simple repair work may or may not require a Class A/B/C mechanical/AC contractor

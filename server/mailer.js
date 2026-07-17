@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { PHONE_DISPLAY } = require('./views/layout');
 
 const smtpConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 
@@ -63,7 +64,7 @@ async function sendBookingConfirmation(booking) {
     `Urgency: ${booking.urgency}`,
     `Issue: ${booking.issue_description}`,
     ``,
-    `If this is an active emergency, you can also call us directly at (305) 555-0199.`,
+    `If this is an active emergency, you can also call us directly at ${PHONE_DISPLAY}.`,
     ``,
     `— ProFix305`,
   ];
@@ -100,7 +101,7 @@ async function sendInvoiceEmail(invoice, pdfBuffer, viewUrl) {
     `You can also view it online here: ${viewUrl}`,
     ``,
     invoice.notes ? `Notes: ${invoice.notes}\n` : '',
-    `Questions about this invoice? Reply to this email or call us at (305) 555-0199.`,
+    `Questions about this invoice? Reply to this email or call us at ${PHONE_DISPLAY}.`,
     ``,
     `— ProFix305`,
   ].filter(Boolean);

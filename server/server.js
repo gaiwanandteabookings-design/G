@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const db = require('./db');
 const { notifyNewBooking, sendBookingConfirmation, smtpConfigured } = require('./mailer');
-const { renderLayout, SITE_URL } = require('./views/layout');
+const { renderLayout, SITE_URL, PHONE_TEL, PHONE_DISPLAY } = require('./views/layout');
 const { buildServicePage } = require('./views/servicePage');
 const { buildLegalPage } = require('./views/legalPage');
 const { buildInvoiceView } = require('./views/invoiceView');
@@ -221,7 +221,7 @@ app.use((req, res) => {
       <p>The page you're looking for doesn't exist or may have moved. Try one of the links below, or call us directly.</p>
       <div class="hero-cta">
         <a href="/" class="btn btn-primary btn-lg">Back to Home</a>
-        <a href="tel:+13055550199" class="btn btn-outline btn-lg" style="border-color: var(--color-navy-700); color: var(--color-navy-800);">Call (305) 555-0199</a>
+        <a href="tel:${PHONE_TEL}" class="btn btn-outline btn-lg" style="border-color: var(--color-navy-700); color: var(--color-navy-800);">Call ${PHONE_DISPLAY}</a>
       </div>
     </div>
   </section>

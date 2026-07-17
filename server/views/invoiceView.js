@@ -1,4 +1,5 @@
 const { invoiceNumber, computeTotals, formatMoney } = require('../invoiceUtils');
+const { PHONE_DISPLAY, PHONE_TEL, EMAIL } = require('./layout');
 
 function buildInvoiceView(invoice) {
   const num = invoiceNumber(invoice.id);
@@ -31,7 +32,7 @@ function buildInvoiceView(invoice) {
           <div>
             <div class="invoice-brand">ProFix<em>305</em></div>
             <p class="invoice-brand-sub">Commercial Equipment Repair — Miami to Palm Beach</p>
-            <p class="invoice-brand-sub">(305) 555-0199 &bull; booking@profix305.com</p>
+            <p class="invoice-brand-sub">${PHONE_DISPLAY} &bull; ${EMAIL}</p>
           </div>
           <div class="invoice-meta">
             <h1>Invoice</h1>
@@ -66,7 +67,7 @@ function buildInvoiceView(invoice) {
 
         <div class="invoice-actions">
           <a class="btn btn-primary btn-lg" href="/invoice/${invoice.public_id}/pdf">Download PDF</a>
-          <a class="btn btn-outline" style="border-color:var(--color-navy-700); color:var(--color-navy-800);" href="tel:+13055550199">Questions? Call (305) 555-0199</a>
+          <a class="btn btn-outline" style="border-color:var(--color-navy-700); color:var(--color-navy-800);" href="tel:${PHONE_TEL}">Questions? Call ${PHONE_DISPLAY}</a>
         </div>
       </div>
     </div>

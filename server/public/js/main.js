@@ -166,7 +166,7 @@
         statusEl.setAttribute('data-state', 'error');
       }
     } catch (err) {
-      statusEl.textContent = 'Network error. Please call us at (305) 555-0199.';
+      statusEl.textContent = 'Network error. Please call us at (786) 919-7675.';
       statusEl.setAttribute('data-state', 'error');
     } finally {
       submitBtn.disabled = false;
