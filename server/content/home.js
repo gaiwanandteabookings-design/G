@@ -3,11 +3,11 @@ const { services } = require('./services');
 
 const meta = {
   title: 'Commercial Equipment Repair | Refrigeration, HVAC & Kitchen Equipment | Miami to Palm Beach | ProFix305',
-  description: 'ProFix305 provides 24/7 commercial equipment repair — refrigeration, walk-in coolers & freezers, HVAC/AC, ice machines, mixers, exhaust hoods, and kitchen equipment — for restaurants, grocers, and facilities across Miami-Dade, Broward, and Palm Beach County. Licensed technicians, same-day dispatch.',
+  description: 'ProFix305 provides 24/7 commercial equipment repair — refrigeration, walk-in coolers & freezers, HVAC/AC, ice machines, mixers, exhaust hoods, and kitchen equipment — for restaurants, grocers, and facilities across Miami-Dade, Broward, and Palm Beach County. Insured technicians, same-day dispatch.',
   keywords: 'commercial equipment repair Miami, commercial refrigeration repair South Florida, walk-in cooler repair, commercial HVAC repair Miami, ice machine repair, commercial kitchen equipment repair, commercial mixer repair, exhaust hood repair, emergency repair Palm Beach',
   canonical: '/',
   ogTitle: 'Commercial Equipment Repair | ProFix305',
-  ogDescription: '24/7 emergency repair for commercial refrigeration, HVAC, ice machines, and kitchen equipment across Miami, Fort Lauderdale, and Palm Beach. Licensed & insured technicians, same-day service.',
+  ogDescription: '24/7 emergency repair for commercial refrigeration, HVAC, ice machines, and kitchen equipment across Miami, Fort Lauderdale, and Palm Beach. Insured, background-checked technicians, same-day service.',
   jsonLd: {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -56,13 +56,13 @@ const bodyHtml = `
       <div class="hero-copy">
         <p class="eyebrow">Miami-Dade &bull; Broward &bull; Palm Beach</p>
         <h1>Commercial Equipment Repair, <span class="accent">Fast.</span></h1>
-        <p class="hero-sub">Refrigeration, HVAC, ice machines, mixers, exhaust hoods, kitchen equipment — when any of it goes down, every hour costs you revenue. ProFix305 dispatches licensed technicians across South Florida — often the same day — to keep restaurants, grocers, hotels, and commercial facilities running.</p>
+        <p class="hero-sub">Refrigeration, HVAC, ice machines, mixers, exhaust hoods, kitchen equipment — when any of it goes down, every hour costs you revenue. ProFix305 dispatches insured technicians across South Florida — often the same day — to keep restaurants, grocers, hotels, and commercial facilities running.</p>
         <div class="hero-cta">
           <a href="#booking" class="btn btn-primary btn-lg">Book a Repair</a>
           <a href="tel:${PHONE_TEL}" class="btn btn-outline btn-lg">Call ${PHONE_DISPLAY}</a>
         </div>
         <ul class="trust-badges">
-          <li>Licensed &amp; Insured</li>
+          <li>Insured &amp; Background-Checked</li>
           <li>24/7 Emergency Dispatch</li>
           <li>Same-Day Response</li>
           <li>15+ Years Combined Experience</li>
@@ -115,8 +115,8 @@ const bodyHtml = `
         </div>
         <div class="why-item">
           <span class="why-number">02</span>
-          <h3>Licensed &amp; Insured</h3>
-          <p>Every technician is background-checked, licensed, and insured — your property and your health inspection are protected.</p>
+          <h3>Insured &amp; Background-Checked</h3>
+          <p>Every technician is background-checked and insured — your property and your health inspection are protected.</p>
         </div>
         <div class="why-item">
           <span class="why-number">03</span>

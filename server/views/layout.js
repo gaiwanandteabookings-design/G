@@ -95,7 +95,7 @@ function footer() {
   </div>
 
   <div class="footer-bottom container">
-    <p>&copy; <span id="year"></span> ProFix305. All rights reserved. License #CACXXXXXXX (placeholder). &middot;
+    <p>&copy; <span id="year"></span> ProFix305. All rights reserved. &middot;
     <a href="/privacy-policy/">Privacy Policy</a> &middot;
     <a href="/terms-of-service/">Terms of Service</a></p>
   </div>

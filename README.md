@@ -75,7 +75,14 @@ with **placeholder business details** that must be replaced before launch:
   everywhere. `server/mailer.js` defaults come from `.env`.
 - **Business name / domain** — `ProFix305` / `profix305.com`, also set in
   `server/views/layout.js` (`SITE_NAME`, `SITE_URL`) and used in JSON-LD/Open Graph tags.
-- **License number** in the footer (`License #CACXXXXXXX (placeholder)`, in `layout.js`).
+- **"Licensed" claims** — deliberately removed from this site (see `content/home.js`,
+  `content/services.js`) after checking Florida's DBPR contractor-license database:
+  simple repair work may or may not require a Class A/B/C mechanical/AC contractor
+  license depending on scope (installs/alterations generally do, like-for-like repair is
+  more of a gray area), but anyone handling refrigerant needs **EPA Section 608**
+  certification regardless (federal, not state). Once you actually hold a real state
+  and/or EPA credential, add "Licensed" back and put the real license number in the
+  footer — until then, the site only claims "Insured."
 - **Testimonials** — the three review cards on the homepage (`content/home.js`) are sample
   placeholder text, clearly marked with an HTML comment. Replace them with real,
   verifiable customer reviews before launch — publishing fabricated testimonials on a
