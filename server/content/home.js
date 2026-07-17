@@ -1,112 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Commercial Equipment Repair | Refrigeration, HVAC & Kitchen Equipment | Miami to Palm Beach | ProFix305</title>
-<meta name="description" content="ProFix305 provides 24/7 commercial equipment repair — refrigeration, walk-in coolers & freezers, HVAC/AC, ice machines, and kitchen equipment — for restaurants, grocers, and facilities across Miami-Dade, Broward, and Palm Beach County. Licensed technicians, same-day dispatch." />
-<meta name="keywords" content="commercial equipment repair Miami, commercial refrigeration repair South Florida, walk-in cooler repair, commercial HVAC repair Miami, ice machine repair, commercial kitchen equipment repair, emergency repair Palm Beach" />
-<link rel="canonical" href="https://www.profix305.com/" />
+const { PHONE_TEL, PHONE_DISPLAY, EMAIL, SITE_URL } = require('../views/layout');
+const { services } = require('./services');
 
-<meta property="og:type" content="website" />
-<meta property="og:title" content="Commercial Equipment Repair | ProFix305" />
-<meta property="og:description" content="24/7 emergency repair for commercial refrigeration, HVAC, ice machines, and kitchen equipment across Miami, Fort Lauderdale, and Palm Beach. Licensed & insured technicians, same-day service." />
-<meta property="og:locale" content="en_US" />
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="/css/styles.css" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%230c1b2e'/%3E%3Cpath d='M24 8v32M24 8l-5.5 4M24 8l5.5 4M24 40l-5.5-4M24 40l5.5-4M8 24h32M8 24l4-5.5M8 24l4 5.5M40 24l-4-5.5M40 24l-4 5.5M13 13l22 22M13 13l1 7M13 13l7 1M35 35l-1-7M35 35l-7 1M13 35l22-22M13 35l7 1M13 35l-1-7M35 13l1 7M35 13l-7-1' stroke='%2335d0e0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "ProFix305",
-  "image": "https://www.profix305.com/images/og-cover.jpg",
-  "telephone": "+1-305-555-0199",
-  "email": "booking@profix305.com",
-  "priceRange": "$$",
-  "areaServed": [
-    { "@type": "City", "name": "Miami" },
-    { "@type": "City", "name": "Fort Lauderdale" },
-    { "@type": "City", "name": "West Palm Beach" },
-    { "@type": "City", "name": "Boca Raton" }
-  ],
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Miami",
-    "addressRegion": "FL",
-    "addressCountry": "US"
+const meta = {
+  title: 'Commercial Equipment Repair | Refrigeration, HVAC & Kitchen Equipment | Miami to Palm Beach | ProFix305',
+  description: 'ProFix305 provides 24/7 commercial equipment repair — refrigeration, walk-in coolers & freezers, HVAC/AC, ice machines, mixers, exhaust hoods, and kitchen equipment — for restaurants, grocers, and facilities across Miami-Dade, Broward, and Palm Beach County. Licensed technicians, same-day dispatch.',
+  keywords: 'commercial equipment repair Miami, commercial refrigeration repair South Florida, walk-in cooler repair, commercial HVAC repair Miami, ice machine repair, commercial kitchen equipment repair, commercial mixer repair, exhaust hood repair, emergency repair Palm Beach',
+  canonical: '/',
+  ogTitle: 'Commercial Equipment Repair | ProFix305',
+  ogDescription: '24/7 emergency repair for commercial refrigeration, HVAC, ice machines, and kitchen equipment across Miami, Fort Lauderdale, and Palm Beach. Licensed & insured technicians, same-day service.',
+  jsonLd: {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: 'ProFix305',
+    image: `${SITE_URL}/images/og-cover.jpg`,
+    telephone: PHONE_TEL,
+    email: EMAIL,
+    priceRange: '$$',
+    areaServed: [
+      { '@type': 'City', name: 'Miami' },
+      { '@type': 'City', name: 'Fort Lauderdale' },
+      { '@type': 'City', name: 'West Palm Beach' },
+      { '@type': 'City', name: 'Boca Raton' },
+    ],
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Miami',
+      addressRegion: 'FL',
+      addressCountry: 'US',
+    },
+    openingHours: 'Mo-Su 00:00-23:59',
+    url: `${SITE_URL}/`,
+    makesOffer: services.map((s) => ({
+      '@type': 'Offer',
+      itemOffered: { '@type': 'Service', name: s.serviceName, url: `${SITE_URL}/miami/${s.slug}/` },
+    })),
   },
-  "openingHours": "Mo-Su 00:00-23:59",
-  "url": "https://www.profix305.com/",
-  "makesOffer": [
-    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Commercial Refrigeration Repair" } },
-    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Commercial HVAC & AC Repair" } },
-    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Ice Machine Repair" } },
-    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Commercial Kitchen Equipment Repair" } }
-  ]
-}
-</script>
-</head>
-<body>
+};
 
-<a class="skip-link" href="#main">Skip to content</a>
+const serviceCards = services
+  .map(
+    (s) => `
+        <article class="card service-card">
+          <div class="card-icon">${s.icon}</div>
+          <h3>${s.cardTitle}</h3>
+          <p>${s.cardBlurb}</p>
+          <a class="card-link" href="/miami/${s.slug}/">Learn more →</a>
+        </article>`
+  )
+  .join('');
 
-<div class="topbar">
-  <p><strong>24/7 Emergency Dispatch</strong> — Equipment down right now? <a href="tel:+13055550199">Call (305) 555-0199</a></p>
-</div>
-
-<header class="site-header" id="top">
-  <div class="container header-inner">
-    <a href="#top" class="brand">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M24 4v40M24 4l-7 5M24 4l7 5M24 44l-7-5M24 44l7-5M4 24h40M4 24l5-7M4 24l5 7M44 24l-5-7M44 24l-5 7M9.5 9.5l29 29M9.5 9.5l1 9M9.5 9.5l9 1M38.5 38.5l-1-9M38.5 38.5l-9 1M9.5 38.5l29-29M9.5 38.5l9-1M9.5 38.5l-1-9M38.5 9.5l1 9M38.5 9.5l-9-1" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </span>
-      <span class="brand-text">ProFix<em>305</em></span>
-    </a>
-
-    <nav class="main-nav" id="main-nav" aria-label="Primary">
-      <a href="#services">Services</a>
-      <a href="#why-us">Why Us</a>
-      <a href="#process">How It Works</a>
-      <a href="#service-area">Service Area</a>
-      <a href="#reviews">Reviews</a>
-      <a href="#faq">FAQ</a>
-      <a href="#contact">Contact</a>
-    </nav>
-
-    <div class="header-actions">
-      <a class="phone-link" href="tel:+13055550199">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 3.5c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z" fill="currentColor"/></svg>
-        <span>(305) 555-0199</span>
-      </a>
-      <a class="btn btn-primary" href="#booking">Book a Repair</a>
-    </div>
-
-    <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle menu">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-</header>
-
-<main id="main">
-
+const bodyHtml = `
   <!-- HERO -->
   <section class="hero">
     <div class="container hero-inner">
       <div class="hero-copy">
         <p class="eyebrow">Miami-Dade &bull; Broward &bull; Palm Beach</p>
         <h1>Commercial Equipment Repair, <span class="accent">Fast.</span></h1>
-        <p class="hero-sub">Refrigeration, HVAC, ice machines, kitchen equipment — when any of it goes down, every hour costs you revenue. ProFix305 dispatches licensed technicians across South Florida — often the same day — to keep restaurants, grocers, hotels, and commercial facilities running.</p>
+        <p class="hero-sub">Refrigeration, HVAC, ice machines, mixers, exhaust hoods, kitchen equipment — when any of it goes down, every hour costs you revenue. ProFix305 dispatches licensed technicians across South Florida — often the same day — to keep restaurants, grocers, hotels, and commercial facilities running.</p>
         <div class="hero-cta">
           <a href="#booking" class="btn btn-primary btn-lg">Book a Repair</a>
-          <a href="tel:+13055550199" class="btn btn-outline btn-lg">Call (305) 555-0199</a>
+          <a href="tel:${PHONE_TEL}" class="btn btn-outline btn-lg">Call ${PHONE_DISPLAY}</a>
         </div>
         <ul class="trust-badges">
           <li>Licensed &amp; Insured</li>
@@ -140,48 +93,9 @@
         <p class="section-sub">One call covers it all — refrigeration, climate control, and the kitchen line. Our technicians work on every major brand and system type used in commercial kitchens, grocery stores, hotels, and cold-storage warehouses.</p>
       </div>
 
-      <div class="grid services-grid">
-        <article class="card service-card">
-          <div class="card-icon">🧊</div>
-          <h3>Commercial Refrigeration Repair</h3>
-          <p>Walk-in coolers &amp; freezers, reach-ins, display cases — from temperature drift to full system failure.</p>
-        </article>
-        <article class="card service-card">
-          <div class="card-icon">🌡️</div>
-          <h3>HVAC &amp; Air Conditioning Repair</h3>
-          <p>Commercial AC and rooftop units serviced and repaired to keep your space comfortable and code-compliant.</p>
-        </article>
-        <article class="card service-card">
-          <div class="card-icon">❄️</div>
-          <h3>Ice Machine Repair &amp; Maintenance</h3>
-          <p>Slow production, cloudy ice, or a machine that's stopped entirely — we get it back to full output.</p>
-        </article>
-        <article class="card service-card">
-          <div class="card-icon">🍳</div>
-          <h3>Commercial Kitchen Equipment Repair</h3>
-          <p>Ranges, ovens, fryers, griddles, and dishwashers — keeping your line moving during service.</p>
-        </article>
-        <article class="card service-card">
-          <div class="card-icon">⚙️</div>
-          <h3>Compressor &amp; Refrigerant System Service</h3>
-          <p>Compressor failure is the most common cause of total system loss. We diagnose, source, and replace with minimal downtime.</p>
-        </article>
-        <article class="card service-card">
-          <div class="card-icon">📟</div>
-          <h3>Digital Controls &amp; Calibration</h3>
-          <p>Thermostat, controller, and sensor calibration so your readout matches what's actually happening on-site.</p>
-        </article>
-        <article class="card service-card">
-          <div class="card-icon">🛠️</div>
-          <h3>Preventive Maintenance Plans</h3>
-          <p>Scheduled inspections across all your equipment that catch worn parts before they turn into a breakdown call.</p>
-        </article>
-        <article class="card service-card">
-          <div class="card-icon">🏗️</div>
-          <h3>New Installation &amp; Retrofits</h3>
-          <p>Installing new equipment or upgrading an aging system? We handle sizing, install, and startup.</p>
-        </article>
+      <div class="grid services-grid">${serviceCards}
       </div>
+      <p class="services-note">Also servicing: compressor &amp; refrigerant systems, digital controls &amp; calibration, preventive maintenance plans, and new equipment installation — ask when you book.</p>
     </div>
   </section>
 
@@ -313,7 +227,7 @@
         <p class="eyebrow">Book a Repair</p>
         <h2>Tell Us What's Happening — We'll Take It From There</h2>
         <p class="section-sub">Fill out the form and our dispatch team will confirm your appointment. For an active emergency, calling gets you the fastest response.</p>
-        <a class="btn btn-outline" href="tel:+13055550199">Or call (305) 555-0199</a>
+        <a class="btn btn-outline" href="tel:${PHONE_TEL}">Or call ${PHONE_DISPLAY}</a>
       </div>
 
       <form class="booking-form" id="booking-form" novalidate>
@@ -353,6 +267,8 @@
               <option value="hvac">HVAC / Air Conditioning</option>
               <option value="ice-machine">Ice Machine</option>
               <option value="kitchen-equipment">Kitchen Equipment (Range, Oven, Fryer, Dishwasher)</option>
+              <option value="mixer">Commercial Mixer</option>
+              <option value="exhaust-hood">Exhaust Hood</option>
               <option value="other">Other</option>
             </select>
           </div>
@@ -430,7 +346,7 @@
             What types of commercial equipment do you service?
             <span class="faq-icon" aria-hidden="true"></span>
           </button>
-          <div class="faq-answer"><p>Refrigeration, HVAC/AC, ice machines, and kitchen equipment across all major brands — including custom-built units.</p></div>
+          <div class="faq-answer"><p>Refrigeration, HVAC/AC, ice machines, mixers, exhaust hoods, and kitchen equipment across all major brands — including custom-built units.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-question" aria-expanded="false">
@@ -456,54 +372,11 @@
       <h2>Equipment Down? Don't Wait for the Losses to Add Up.</h2>
       <p>Call now for emergency dispatch, or book online and we'll confirm your appointment shortly.</p>
       <div class="hero-cta">
-        <a href="tel:+13055550199" class="btn btn-primary btn-lg">Call (305) 555-0199</a>
+        <a href="tel:${PHONE_TEL}" class="btn btn-primary btn-lg">Call ${PHONE_DISPLAY}</a>
         <a href="#booking" class="btn btn-outline btn-lg">Book Online</a>
       </div>
     </div>
   </section>
+`;
 
-</main>
-
-<footer class="site-footer">
-  <div class="container footer-inner">
-    <div class="footer-brand">
-      <span class="brand-text">ProFix<em>305</em></span>
-      <p>Commercial refrigeration, HVAC, and kitchen equipment repair for South Florida — Miami to Palm Beach.</p>
-    </div>
-
-    <div class="footer-col">
-      <h4>Company</h4>
-      <a href="#services">Services</a>
-      <a href="#why-us">Why Us</a>
-      <a href="#process">How It Works</a>
-      <a href="#reviews">Reviews</a>
-      <a href="#faq">FAQ</a>
-    </div>
-
-    <div class="footer-col">
-      <h4>Service Area</h4>
-      <span>Miami-Dade County</span>
-      <span>Broward County</span>
-      <span>Palm Beach County</span>
-    </div>
-
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <a href="tel:+13055550199">(305) 555-0199</a>
-      <a href="mailto:booking@profix305.com">booking@profix305.com</a>
-      <span>24/7 Emergency Dispatch</span>
-    </div>
-  </div>
-
-  <div class="footer-bottom container">
-    <p>&copy; <span id="year"></span> ProFix305. All rights reserved. License #CACXXXXXXX (placeholder).</p>
-  </div>
-</footer>
-
-<a href="tel:+13055550199" class="mobile-call-fab" aria-label="Call ProFix305 now">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 3.5c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z" fill="currentColor"/></svg>
-</a>
-
-<script src="/js/main.js"></script>
-</body>
-</html>
+module.exports = { meta, bodyHtml };

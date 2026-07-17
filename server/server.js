@@ -5,15 +5,43 @@ const crypto = require('node:crypto');
 
 const db = require('./db');
 const { notifyNewBooking, smtpConfigured } = require('./mailer');
+const { renderLayout } = require('./views/layout');
+const { buildServicePage } = require('./views/servicePage');
+const home = require('./content/home');
+const { services } = require('./content/services');
+const { SITE_URL } = require('./views/layout');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 
 app.use(express.json({ limit: '20kb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
-const EQUIPMENT_TYPES = new Set(['refrigeration', 'hvac', 'ice-machine', 'kitchen-equipment', 'other']);
+app.get('/', (req, res) => {
+  res.type('html').send(renderLayout({ ...home.meta, bodyHtml: home.bodyHtml }));
+});
+
+services.forEach((service) => {
+  app.get(`/miami/${service.slug}`, (req, res) => {
+    res.type('html').send(renderLayout(buildServicePage(service)));
+  });
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  const urls = [
+    { loc: `${SITE_URL}/`, priority: '1.0' },
+    ...services.map((s) => ({ loc: `${SITE_URL}/miami/${s.slug}/`, priority: '0.8' })),
+  ];
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map((u) => `  <url>\n    <loc>${u.loc}</loc>\n    <priority>${u.priority}</priority>\n  </url>`).join('\n')}
+</urlset>
+`;
+  res.type('application/xml').send(xml);
+});
+
+const EQUIPMENT_TYPES = new Set(['refrigeration', 'hvac', 'ice-machine', 'kitchen-equipment', 'mixer', 'exhaust-hood', 'other']);
 const URGENCY_LEVELS = new Set(['emergency', 'this-week', 'scheduled']);
 
 // Простая защита от спама/перебора: не более 5 заявок с одного IP за 10 минут.
