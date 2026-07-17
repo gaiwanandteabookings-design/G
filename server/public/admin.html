@@ -3,83 +3,301 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ProFix305 — Booking Leads (Admin)</title>
+<title>ProFix305 — Admin</title>
 <meta name="robots" content="noindex, nofollow" />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#0c1b2e; --ink:#0b1220; --cyan:#35d0e0; --slate:#5a6b82; --ice:#f4faff;
+    --navy:#0c1b2e; --ink:#0b1220; --cyan:#35d0e0; --slate:#5a6b82; --ice:#f4faff; --line:#e3e9f0;
   }
   * { box-sizing: border-box; }
-  body { font-family: 'Inter', system-ui, sans-serif; background: var(--ice); margin:0; color: var(--ink); }
-  header { background: var(--navy); color:#fff; padding: 18px 28px; display:flex; align-items:center; justify-content:space-between; }
-  header h1 { font-family:'Space Grotesk',sans-serif; font-size:1.15rem; margin:0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--ice); margin:0; color: var(--ink); -webkit-tap-highlight-color: transparent; }
+  header { background: var(--navy); color:#fff; padding: 14px 20px; display:flex; align-items:center; justify-content:space-between; position: sticky; top:0; z-index: 20; }
+  header h1 { font-family:'Space Grotesk',sans-serif; font-size:1.1rem; margin:0; }
   header h1 em { color: var(--cyan); font-style: normal; }
-  main { max-width: 1100px; margin: 0 auto; padding: 28px; }
-  .gate { max-width: 380px; margin: 80px auto; background:#fff; padding:28px; border-radius:14px; box-shadow:0 10px 30px -12px rgba(12,27,46,.2); }
-  .gate h2 { margin-top:0; font-family:'Space Grotesk',sans-serif; }
-  .gate input { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid #d5dee8; margin:10px 0 16px; font-size:.95rem; }
-  .gate button, .toolbar button { background: var(--cyan); border:none; color: var(--navy); font-weight:700; padding:10px 16px; border-radius:999px; cursor:pointer; }
+  header button { background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 14px;border-radius:999px; font-size:.85rem; }
+  main { max-width: 1200px; margin: 0 auto; padding: 20px; }
   .hidden { display:none !important; }
-  .toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; }
+
+  /* Login gate */
+  .gate { max-width: 380px; margin: 12vh auto; background:#fff; padding:32px 28px; border-radius:16px; box-shadow:0 10px 30px -12px rgba(12,27,46,.2); }
+  .gate .gate-brand { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.3rem; margin-bottom: 4px; }
+  .gate .gate-brand em { color: var(--cyan); font-style: normal; }
+  .gate p.sub { color: var(--slate); font-size: .88rem; margin: 0 0 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display:block; font-size:.82rem; font-weight:600; margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width:100%; padding:11px 12px; border-radius:8px; border:1.5px solid var(--line); font-size:.95rem; font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--cyan); border-color: var(--cyan); }
+  .btn { background: var(--cyan); border:none; color: var(--navy); font-weight:700; padding:11px 18px; border-radius:999px; cursor:pointer; font-size:.9rem; }
+  .btn:disabled { opacity: .55; }
+  .btn-block { width: 100%; }
+  .btn-ghost { background: none; border: 1.5px solid var(--line); color: var(--navy); }
+  .btn-sm { padding: 6px 12px; font-size: .8rem; }
+  .btn-danger-ghost { background:none; border:1.5px solid #f3c2c2; color:#b3261e; }
+  .error-text { color:#d64545; font-size:.85rem; margin-top:8px; }
+
+  /* Tabs */
+  .tabs { display:flex; gap: 6px; margin-bottom: 18px; background:#fff; padding:5px; border-radius: 999px; width: fit-content; box-shadow: 0 2px 10px -6px rgba(12,27,46,.15); }
+  .tabs button { border:none; background:none; padding: 9px 18px; border-radius: 999px; font-weight:600; font-size:.88rem; color: var(--slate); cursor:pointer; }
+  .tabs button[aria-selected="true"] { background: var(--navy); color: #fff; }
+
+  .panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .panel-head h2 { font-family:'Space Grotesk',sans-serif; font-size:1.15rem; margin:0; }
+  .count-pill { color: var(--slate); font-size:.85rem; }
+
   table { width:100%; border-collapse: collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px -12px rgba(12,27,46,.15); }
-  th, td { text-align:left; padding:12px 14px; font-size:.85rem; border-bottom:1px solid #edf1f6; vertical-align: top; }
-  th { background: var(--navy); color:#fff; font-weight:600; position: sticky; top:0; }
+  th, td { text-align:left; padding:12px 14px; font-size:.85rem; border-bottom:1px solid var(--line); vertical-align: top; }
+  th { background: var(--navy); color:#fff; font-weight:600; }
   tr:last-child td { border-bottom:none; }
-  .badge { padding:3px 9px; border-radius:999px; font-size:.72rem; font-weight:700; }
-  .badge.emergency { background:#ffe3d1; color:#b34700; }
-  .badge.this-week { background:#fff4cf; color:#8a6d00; }
-  .badge.scheduled { background:#dff5e6; color:#1a8f5e; }
-  select.status { padding:5px 8px; border-radius:6px; border:1px solid #d5dee8; font-size:.8rem; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; }
+  .badge.emergency, .badge.sent { background:#fff4cf; color:#8a6d00; }
+  .badge.this-week { background:#e2eefc; color:#155ea8; }
+  .badge.scheduled, .badge.draft { background:#e7ecf2; color: var(--slate); }
+  .badge.paid { background:#dff5e6; color:#1a8f5e; }
+  .badge.void, .badge.cancelled { background:#fbe2e2; color:#b3261e; }
+  select.status { padding:5px 8px; border-radius:6px; border:1px solid var(--line); font-size:.8rem; }
   .empty { text-align:center; padding: 60px 20px; color: var(--slate); }
-  .error { color:#d64545; font-size:.85rem; margin-top:6px; }
+  .row-actions { display:flex; gap:6px; flex-wrap: wrap; }
+  a.link-btn { display:inline-block; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--navy); font-size: .8rem; font-weight: 600; text-decoration:none; }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed; inset:0; background: rgba(11,18,32,.55); display:flex; align-items:flex-start; justify-content:center;
+    padding: 24px 16px; overflow-y: auto; z-index: 50;
+  }
+  .modal {
+    background:#fff; border-radius:16px; width: 100%; max-width: 640px; padding: 26px; margin: 20px 0;
+  }
+  .modal h2 { font-family:'Space Grotesk',sans-serif; font-size:1.2rem; margin: 0 0 4px; }
+  .modal .sub { color: var(--slate); font-size: .85rem; margin: 0 0 18px; }
+  .field-row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .line-items { border: 1.5px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 14px; }
+  .line-item-row { display:grid; grid-template-columns: 1fr 60px 90px 90px 30px; gap: 8px; align-items:center; margin-bottom: 8px; }
+  .line-item-row input { padding: 8px 9px; font-size: .88rem; }
+  .line-item-row .remove-item { background:none; border:none; color:#b3261e; font-size:1.1rem; cursor:pointer; padding: 4px; }
+  .line-item-total { text-align:right; font-size:.85rem; color: var(--slate); }
+  .invoice-summary { text-align:right; font-size: .95rem; margin-top: 10px; }
+  .invoice-summary strong { font-size: 1.1rem; color: var(--navy); }
+  .modal-actions { display:flex; gap: 10px; justify-content:flex-end; margin-top: 18px; flex-wrap: wrap; }
+  .modal-close { position: absolute; }
+  .modal-header-row { display:flex; justify-content:space-between; align-items:flex-start; }
+  .modal-header-row button { background:none; border:none; font-size:1.3rem; color: var(--slate); cursor:pointer; line-height:1; }
+  .banner { padding: 10px 14px; border-radius: 8px; font-size: .85rem; margin-bottom: 14px; }
+  .banner.ok { background:#dff5e6; color:#1a8f5e; }
+  .banner.err { background:#fbe2e2; color:#b3261e; }
+
+  @media (max-width: 720px) {
+    .field-row { grid-template-columns: 1fr; }
+    .line-item-row { grid-template-columns: 1fr 1fr; }
+    .line-item-row .line-item-total { grid-column: span 2; text-align: left; }
+    th, td { font-size: .8rem; padding: 10px; }
+  }
 </style>
 </head>
 <body>
 
 <div class="gate" id="gate">
-  <h2>Admin Login</h2>
-  <p style="color:var(--slate); font-size:.88rem;">Enter the admin token from your server <code>.env</code> file.</p>
-  <input type="password" id="token-input" placeholder="Admin token" />
-  <button id="gate-submit">View Leads</button>
-  <p class="error hidden" id="gate-error">Invalid token.</p>
+  <div class="gate-brand">ProFix<em>305</em></div>
+  <p class="sub">Sign in to manage bookings and invoices.</p>
+  <div class="field">
+    <label for="username-input">Username</label>
+    <input type="text" id="username-input" autocomplete="username" />
+  </div>
+  <div class="field">
+    <label for="password-input">Password</label>
+    <input type="password" id="password-input" autocomplete="current-password" />
+  </div>
+  <button class="btn btn-block" id="gate-submit">Sign In</button>
+  <p class="error-text hidden" id="gate-error"></p>
 </div>
 
 <div id="app" class="hidden">
   <header>
-    <h1>ProFix<em>305</em> — Booking Leads</h1>
-    <button id="logout" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 14px;border-radius:999px;">Log out</button>
+    <h1>ProFix<em>305</em> — Admin</h1>
+    <button id="logout">Log out</button>
   </header>
   <main>
-    <div class="toolbar">
-      <span id="count" style="color:var(--slate); font-size:.9rem;"></span>
-      <button id="refresh">Refresh</button>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-bookings" aria-selected="true">Bookings</button>
+      <button role="tab" id="tab-invoices" aria-selected="false">Invoices</button>
     </div>
-    <div id="table-wrap"></div>
+
+    <section id="panel-bookings">
+      <div class="panel-head">
+        <h2>Booking Requests</h2>
+        <span class="count-pill" id="bookings-count"></span>
+      </div>
+      <div class="table-scroll" id="bookings-table-wrap"></div>
+    </section>
+
+    <section id="panel-invoices" class="hidden">
+      <div class="panel-head">
+        <h2>Invoices</h2>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <span class="count-pill" id="invoices-count"></span>
+          <button class="btn" id="new-invoice-btn">+ New Invoice</button>
+        </div>
+      </div>
+      <div class="table-scroll" id="invoices-table-wrap"></div>
+    </section>
   </main>
+</div>
+
+<!-- Invoice create/edit modal -->
+<div class="modal-backdrop hidden" id="invoice-modal-backdrop">
+  <div class="modal">
+    <div class="modal-header-row">
+      <div>
+        <h2>New Invoice</h2>
+        <p class="sub">Fill in the customer and line items, then save as a draft or send it right away.</p>
+      </div>
+      <button id="modal-close" aria-label="Close">&times;</button>
+    </div>
+
+    <div id="invoice-banner"></div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="inv-name">Customer Name*</label>
+        <input type="text" id="inv-name" />
+      </div>
+      <div class="field">
+        <label for="inv-email">Email</label>
+        <input type="email" id="inv-email" />
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="inv-phone">Phone</label>
+        <input type="tel" id="inv-phone" />
+      </div>
+      <div class="field">
+        <label for="inv-tax">Tax Rate (%)</label>
+        <input type="number" id="inv-tax" min="0" max="100" step="0.1" value="0" />
+      </div>
+    </div>
+    <div class="field">
+      <label for="inv-address">Service Address</label>
+      <input type="text" id="inv-address" />
+    </div>
+
+    <div class="field">
+      <label>Line Items</label>
+      <div class="line-items" id="line-items"></div>
+      <button class="btn btn-ghost btn-sm" id="add-line-item" type="button">+ Add Line Item</button>
+    </div>
+
+    <div class="field">
+      <label for="inv-notes">Notes (optional)</label>
+      <textarea id="inv-notes" rows="2"></textarea>
+    </div>
+
+    <div class="invoice-summary" id="invoice-summary"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="save-draft-btn">Save as Draft</button>
+      <button class="btn" id="save-send-btn">Save &amp; Send Email</button>
+    </div>
+  </div>
 </div>
 
 <script>
 (function () {
   const gate = document.getElementById('gate');
   const app = document.getElementById('app');
-  const tokenInput = document.getElementById('token-input');
+  const usernameInput = document.getElementById('username-input');
+  const passwordInput = document.getElementById('password-input');
   const gateError = document.getElementById('gate-error');
 
-  function getToken() { return sessionStorage.getItem('cc305_admin_token') || ''; }
-  function setToken(t) { sessionStorage.setItem('cc305_admin_token', t); }
-  function clearToken() { sessionStorage.removeItem('cc305_admin_token'); }
+  function getToken() { return sessionStorage.getItem('pf305_admin_token') || ''; }
+  function setToken(t) { sessionStorage.setItem('pf305_admin_token', t); }
+  function clearToken() { sessionStorage.removeItem('pf305_admin_token'); }
 
-  async function loadBookings() {
-    const token = getToken();
-    const res = await fetch('/api/bookings', { headers: { 'X-Admin-Token': token } });
-    if (!res.ok) {
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      headers: { ...(options.headers || {}), 'X-Admin-Token': getToken() },
+    });
+    if (res.status === 401) {
       clearToken();
-      showGate('Invalid token.');
-      return;
+      showGate('Session expired — please sign in again.');
+      throw new Error('unauthorized');
     }
+    return res;
+  }
+
+  function showGate(errorMsg) {
+    app.classList.add('hidden');
+    gate.classList.remove('hidden');
+    gateError.classList.toggle('hidden', !errorMsg);
+    gateError.textContent = errorMsg || '';
+  }
+
+  function showApp() {
+    gate.classList.add('hidden');
+    app.classList.remove('hidden');
+    loadBookings();
+    loadInvoices();
+  }
+
+  document.getElementById('gate-submit').addEventListener('click', async () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    if (!username || !password) return;
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setToken(data.token);
+        passwordInput.value = '';
+        showApp();
+      } else {
+        gateError.textContent = data.error || 'Sign-in failed.';
+        gateError.classList.remove('hidden');
+      }
+    } catch (err) {
+      gateError.textContent = 'Network error — try again.';
+      gateError.classList.remove('hidden');
+    }
+  });
+  [usernameInput, passwordInput].forEach((el) => {
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('gate-submit').click(); });
+  });
+
+  document.getElementById('logout').addEventListener('click', async () => {
+    try { await apiFetch('/api/admin/logout', { method: 'POST' }); } catch (e) {}
+    clearToken();
+    showGate('');
+  });
+
+  // Tabs
+  const tabBookings = document.getElementById('tab-bookings');
+  const tabInvoices = document.getElementById('tab-invoices');
+  const panelBookings = document.getElementById('panel-bookings');
+  const panelInvoices = document.getElementById('panel-invoices');
+  tabBookings.addEventListener('click', () => switchTab('bookings'));
+  tabInvoices.addEventListener('click', () => switchTab('invoices'));
+  function switchTab(name) {
+    const bookingsActive = name === 'bookings';
+    tabBookings.setAttribute('aria-selected', String(bookingsActive));
+    tabInvoices.setAttribute('aria-selected', String(!bookingsActive));
+    panelBookings.classList.toggle('hidden', !bookingsActive);
+    panelInvoices.classList.toggle('hidden', bookingsActive);
+  }
+
+  // ---------- Bookings ----------
+  async function loadBookings() {
+    const res = await apiFetch('/api/bookings').catch(() => null);
+    if (!res) return;
     const data = await res.json();
-    renderTable(data.bookings || []);
+    renderBookings(data.bookings || []);
   }
 
   function urgencyBadge(u) {
@@ -87,9 +305,9 @@
     return `<span class="badge ${u}">${label}</span>`;
   }
 
-  function renderTable(bookings) {
-    document.getElementById('count').textContent = `${bookings.length} lead${bookings.length === 1 ? '' : 's'}`;
-    const wrap = document.getElementById('table-wrap');
+  function renderBookings(bookings) {
+    document.getElementById('bookings-count').textContent = `${bookings.length} lead${bookings.length === 1 ? '' : 's'}`;
+    const wrap = document.getElementById('bookings-table-wrap');
     if (!bookings.length) {
       wrap.innerHTML = '<div class="empty">No booking requests yet.</div>';
       return;
@@ -102,19 +320,20 @@
         <td>${b.address}</td>
         <td>${b.equipment_type}</td>
         <td>${urgencyBadge(b.urgency)}<br><small>${b.preferred_date || ''} ${b.preferred_time || ''}</small></td>
-        <td style="max-width:220px;">${b.issue_description}</td>
+        <td style="max-width:200px;">${b.issue_description}</td>
         <td>
           <select class="status" data-id="${b.id}">
             ${['new','contacted','scheduled','completed','cancelled'].map((s) => `<option value="${s}" ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
         </td>
+        <td><button class="btn btn-sm" data-invoice-from="${b.id}">Invoice</button></td>
       </tr>
     `).join('');
 
     wrap.innerHTML = `
       <table>
         <thead>
-          <tr><th>ID / Date</th><th>Name</th><th>Contact</th><th>Address</th><th>Equipment</th><th>Urgency</th><th>Issue</th><th>Status</th></tr>
+          <tr><th>ID / Date</th><th>Name</th><th>Contact</th><th>Address</th><th>Equipment</th><th>Urgency</th><th>Issue</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
@@ -123,41 +342,211 @@
     wrap.querySelectorAll('.status').forEach((sel) => {
       sel.addEventListener('change', async () => {
         const id = sel.getAttribute('data-id');
-        await fetch(`/api/bookings/${id}/status`, {
+        await apiFetch(`/api/bookings/${id}/status`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': getToken() },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: sel.value }),
         });
       });
     });
+
+    wrap.querySelectorAll('[data-invoice-from]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const booking = bookings.find((b) => String(b.id) === btn.getAttribute('data-invoice-from'));
+        openInvoiceModal(booking);
+        switchTab('invoices');
+      });
+    });
   }
 
-  function showGate(errorMsg) {
-    app.classList.add('hidden');
-    gate.classList.remove('hidden');
-    gateError.classList.toggle('hidden', !errorMsg);
+  // ---------- Invoices ----------
+  async function loadInvoices() {
+    const res = await apiFetch('/api/invoices').catch(() => null);
+    if (!res) return;
+    const data = await res.json();
+    renderInvoices(data.invoices || []);
   }
 
-  function showApp() {
-    gate.classList.add('hidden');
-    app.classList.remove('hidden');
-    loadBookings();
+  function money(n) { return `$${Number(n).toFixed(2)}`; }
+
+  function renderInvoices(invoices) {
+    document.getElementById('invoices-count').textContent = `${invoices.length} invoice${invoices.length === 1 ? '' : 's'}`;
+    const wrap = document.getElementById('invoices-table-wrap');
+    if (!invoices.length) {
+      wrap.innerHTML = '<div class="empty">No invoices yet — create one from a booking or start a new one.</div>';
+      return;
+    }
+    const rows = invoices.map((inv) => `
+      <tr>
+        <td>${inv.invoice_number}<br><small>${new Date(inv.created_at).toLocaleDateString()}</small></td>
+        <td>${inv.customer_name}<br><small>${inv.customer_email || ''}</small></td>
+        <td>${money(inv.totals.total)}</td>
+        <td><span class="badge ${inv.status}">${inv.status}</span></td>
+        <td>
+          <div class="row-actions">
+            <a class="link-btn" href="/api/invoices/${inv.id}/pdf?token=${encodeURIComponent(getToken())}" target="_blank" rel="noopener">PDF</a>
+            <button class="btn btn-ghost btn-sm" data-resend="${inv.id}">${inv.status === 'draft' ? 'Send' : 'Resend'}</button>
+            ${inv.status !== 'paid' ? `<button class="btn btn-ghost btn-sm" data-mark-paid="${inv.id}">Mark Paid</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    wrap.querySelectorAll('[data-resend]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-resend');
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        try {
+          const res = await apiFetch(`/api/invoices/${id}/send`, { method: 'POST' });
+          const data = await res.json();
+          if (!data.ok) alert(data.error || 'Failed to send.');
+          await loadInvoices();
+        } catch (e) {
+          btn.disabled = false;
+        }
+      });
+    });
+
+    wrap.querySelectorAll('[data-mark-paid]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-mark-paid');
+        await apiFetch(`/api/invoices/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'paid' }),
+        });
+        await loadInvoices();
+      });
+    });
   }
 
-  document.getElementById('gate-submit').addEventListener('click', () => {
-    const val = tokenInput.value.trim();
-    if (!val) return;
-    setToken(val);
-    showApp();
-  });
-  tokenInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('gate-submit').click();
-  });
-  document.getElementById('logout').addEventListener('click', () => {
-    clearToken();
-    showGate('');
-  });
-  document.getElementById('refresh').addEventListener('click', loadBookings);
+  // ---------- Invoice modal ----------
+  const backdrop = document.getElementById('invoice-modal-backdrop');
+  const lineItemsWrap = document.getElementById('line-items');
+
+  function addLineItemRow(item) {
+    const row = document.createElement('div');
+    row.className = 'line-item-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Description" class="li-desc" value="${item?.description || ''}" />
+      <input type="number" placeholder="Qty" class="li-qty" min="0" step="1" value="${item?.qty ?? 1}" />
+      <input type="number" placeholder="Unit price" class="li-price" min="0" step="0.01" value="${item?.unitPrice ?? ''}" />
+      <span class="line-item-total">$0.00</span>
+      <button type="button" class="remove-item" aria-label="Remove line item">&times;</button>
+    `;
+    row.querySelector('.remove-item').addEventListener('click', () => { row.remove(); updateSummary(); });
+    row.querySelectorAll('input').forEach((inp) => inp.addEventListener('input', updateSummary));
+    lineItemsWrap.appendChild(row);
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const rows = Array.from(lineItemsWrap.querySelectorAll('.line-item-row'));
+    let subtotal = 0;
+    rows.forEach((row) => {
+      const qty = Number(row.querySelector('.li-qty').value) || 0;
+      const price = Number(row.querySelector('.li-price').value) || 0;
+      const amount = qty * price;
+      row.querySelector('.line-item-total').textContent = money(amount);
+      subtotal += amount;
+    });
+    const taxRate = Number(document.getElementById('inv-tax').value) || 0;
+    const tax = subtotal * (taxRate / 100);
+    const total = subtotal + tax;
+    document.getElementById('invoice-summary').innerHTML =
+      `Subtotal: ${money(subtotal)}${taxRate > 0 ? ` &nbsp; Tax: ${money(tax)}` : ''} &nbsp; <strong>Total: ${money(total)}</strong>`;
+  }
+  document.getElementById('inv-tax').addEventListener('input', updateSummary);
+  document.getElementById('add-line-item').addEventListener('click', () => addLineItemRow());
+
+  function openInvoiceModal(booking) {
+    document.getElementById('invoice-banner').innerHTML = '';
+    document.getElementById('inv-name').value = booking?.name || booking?.business_name || '';
+    document.getElementById('inv-email').value = booking?.email || '';
+    document.getElementById('inv-phone').value = booking?.phone || '';
+    document.getElementById('inv-address').value = booking?.address || '';
+    document.getElementById('inv-tax').value = 0;
+    document.getElementById('inv-notes').value = '';
+    lineItemsWrap.innerHTML = '';
+    addLineItemRow(booking ? { description: `${booking.equipment_type} repair`, qty: 1, unitPrice: '' } : undefined);
+    backdrop.classList.remove('hidden');
+  }
+  function closeInvoiceModal() { backdrop.classList.add('hidden'); }
+
+  document.getElementById('new-invoice-btn').addEventListener('click', () => openInvoiceModal());
+  document.getElementById('modal-close').addEventListener('click', closeInvoiceModal);
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeInvoiceModal(); });
+
+  function collectInvoicePayload() {
+    const lineItems = Array.from(lineItemsWrap.querySelectorAll('.line-item-row')).map((row) => ({
+      description: row.querySelector('.li-desc').value.trim(),
+      qty: Number(row.querySelector('.li-qty').value),
+      unitPrice: Number(row.querySelector('.li-price').value),
+    }));
+    return {
+      customerName: document.getElementById('inv-name').value.trim(),
+      customerEmail: document.getElementById('inv-email').value.trim(),
+      customerPhone: document.getElementById('inv-phone').value.trim(),
+      customerAddress: document.getElementById('inv-address').value.trim(),
+      taxRate: Number(document.getElementById('inv-tax').value) || 0,
+      notes: document.getElementById('inv-notes').value.trim(),
+      lineItems,
+    };
+  }
+
+  async function submitInvoice(sendNow) {
+    const payload = collectInvoicePayload();
+    if (!payload.customerName) return showBanner('Customer name is required.', true);
+    if (!payload.lineItems.length || payload.lineItems.some((i) => !i.description || !(i.qty > 0))) {
+      return showBanner('Add at least one line item with a description and quantity.', true);
+    }
+    if (sendNow && !payload.customerEmail) {
+      return showBanner('Add a customer email to send the invoice.', true);
+    }
+
+    const btn = sendNow ? document.getElementById('save-send-btn') : document.getElementById('save-draft-btn');
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = sendNow ? 'Sending…' : 'Saving…';
+
+    try {
+      const res = await apiFetch('/api/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, sendNow }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        showBanner(data.error || 'Something went wrong.', true);
+      } else if (data.sendError) {
+        showBanner(`Invoice saved, but email failed to send: ${data.sendError}`, true);
+        await loadInvoices();
+      } else {
+        closeInvoiceModal();
+        await loadInvoices();
+      }
+    } catch (e) {
+      showBanner('Network error — try again.', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  function showBanner(text, isError) {
+    document.getElementById('invoice-banner').innerHTML = `<div class="banner ${isError ? 'err' : 'ok'}">${text}</div>`;
+  }
+
+  document.getElementById('save-draft-btn').addEventListener('click', () => submitInvoice(false));
+  document.getElementById('save-send-btn').addEventListener('click', () => submitInvoice(true));
 
   if (getToken()) showApp(); else showGate('');
 })();
