@@ -97,6 +97,31 @@ with **placeholder business details** that must be replaced before launch:
 
 ## Production deployment
 
+### Fastest path: Render (free tier, ~5 minutes)
+
+This repo includes `render.yaml` at the root, so Render can deploy it automatically:
+
+1. Sign up at [render.com](https://render.com) (GitHub login is fastest).
+2. Dashboard → **New +** → **Blueprint**.
+3. Connect your GitHub account and pick this repo/branch.
+4. Render reads `render.yaml` and pre-fills everything (root dir `server`, build/start
+   commands, Node version, a random `ADMIN_TOKEN`) — click **Apply**.
+5. After the first build finishes (a couple minutes), Render gives you a live URL like
+   `https://profix305.onrender.com` — open it, that's the real site.
+
+**Free-tier caveats to know going in:**
+- The free plan spins the service down after ~15 minutes of no traffic and takes ~30-60s
+  to wake back up on the next visit — fine for showing someone the site, not ideal for a
+  real launch expecting instant response on every visit (paid plan removes this).
+- The free plan has **no persistent disk**, so `server/data/bookings.db` gets wiped on
+  every redeploy and periodically on restart. Fine for a demo/preview; before a real
+  launch taking real bookings, either add a paid persistent disk in the Render dashboard,
+  or point the app at a hosted database instead.
+- Find/regenerate `ADMIN_TOKEN` under the service's **Environment** tab in the Render
+  dashboard to reach `/admin.html`.
+
+### General checklist (any host)
+
 The app is a plain Node process (`npm start`) with a file-based SQLite database — it runs
 on almost any Node host. Rough checklist to take it from "runs on my machine" to live:
 
