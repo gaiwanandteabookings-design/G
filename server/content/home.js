@@ -1,6 +1,51 @@
 const { PHONE_TEL, PHONE_DISPLAY, EMAIL, SITE_URL } = require('../views/layout');
 const { renderServiceIcon } = require('../views/icons');
 const { services } = require('./services');
+const { areas } = require('./areas');
+const { faqPageSchema } = require('../views/schema');
+
+const countyGroups = [
+  { county: 'Miami-Dade', slugs: ['miami', 'hialeah', 'doral', 'coral-gables', 'homestead', 'kendall'] },
+  { county: 'Broward', slugs: ['fort-lauderdale', 'hollywood', 'pompano-beach', 'davie', 'sunrise'] },
+  { county: 'Palm Beach', slugs: ['west-palm-beach', 'boca-raton', 'delray-beach', 'boynton-beach', 'jupiter'] },
+];
+const areaByslug = Object.fromEntries(areas.map((a) => [a.slug, a]));
+const areaCardsHtml = countyGroups
+  .map(
+    (group) => `
+        <div class="area-card">
+          <h3>${group.county}</h3>
+          <p>${group.slugs.map((slug) => `<a href="/areas/${slug}/">${areaByslug[slug].name}</a>`).join(' &bull; ')}</p>
+        </div>`
+  )
+  .join('');
+
+const faqs = [
+  {
+    q: 'How fast can a technician reach my location?',
+    a: 'Most calls across Miami-Dade, Broward, and Palm Beach are dispatched the same day, with emergency breakdowns prioritized first.',
+  },
+  {
+    q: 'Do you offer 24/7 emergency service?',
+    a: 'Yes. Our emergency line is answered around the clock, seven days a week, because down equipment doesn’t wait for business hours.',
+  },
+  {
+    q: 'What does a service call cost?',
+    a: 'We provide a flat-rate quote after diagnosis, before any repair begins, so you always know the cost up front.',
+  },
+  {
+    q: 'What types of commercial equipment do you service?',
+    a: 'Refrigeration, HVAC/AC, ice machines, mixers, exhaust hoods, and kitchen equipment across all major brands — including custom-built units.',
+  },
+  {
+    q: 'Can you set up a maintenance plan to prevent breakdowns?',
+    a: 'Absolutely — scheduled maintenance plans across all your equipment are one of the most effective ways to avoid emergency downtime and extend equipment life.',
+  },
+  {
+    q: 'What areas do you serve?',
+    a: 'We cover the full South Florida corridor from Miami-Dade through Broward to Palm Beach County.',
+  },
+];
 
 const meta = {
   title: 'Commercial Equipment Repair | Refrigeration, HVAC & Kitchen Equipment | Miami to Palm Beach | ProFix305',
@@ -9,33 +54,36 @@ const meta = {
   canonical: '/',
   ogTitle: 'Commercial Equipment Repair | ProFix305',
   ogDescription: '24/7 emergency repair for commercial refrigeration, HVAC, ice machines, and kitchen equipment across Miami, Fort Lauderdale, and Palm Beach. Insured, background-checked technicians, same-day service.',
-  jsonLd: {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: 'ProFix305',
-    image: `${SITE_URL}/images/og-cover.jpg`,
-    telephone: PHONE_TEL,
-    email: EMAIL,
-    priceRange: '$$',
-    areaServed: [
-      { '@type': 'City', name: 'Miami' },
-      { '@type': 'City', name: 'Fort Lauderdale' },
-      { '@type': 'City', name: 'West Palm Beach' },
-      { '@type': 'City', name: 'Boca Raton' },
-    ],
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Miami',
-      addressRegion: 'FL',
-      addressCountry: 'US',
+  jsonLd: [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      name: 'ProFix305',
+      image: `${SITE_URL}/images/og-cover.jpg`,
+      telephone: PHONE_TEL,
+      email: EMAIL,
+      priceRange: '$$',
+      areaServed: [
+        { '@type': 'City', name: 'Miami' },
+        { '@type': 'City', name: 'Fort Lauderdale' },
+        { '@type': 'City', name: 'West Palm Beach' },
+        { '@type': 'City', name: 'Boca Raton' },
+      ],
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Miami',
+        addressRegion: 'FL',
+        addressCountry: 'US',
+      },
+      openingHours: 'Mo-Su 00:00-23:59',
+      url: `${SITE_URL}/`,
+      makesOffer: services.map((s) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: s.serviceName, url: `${SITE_URL}/miami/${s.slug}/` },
+      })),
     },
-    openingHours: 'Mo-Su 00:00-23:59',
-    url: `${SITE_URL}/`,
-    makesOffer: services.map((s) => ({
-      '@type': 'Offer',
-      itemOffered: { '@type': 'Service', name: s.serviceName, url: `${SITE_URL}/miami/${s.slug}/` },
-    })),
-  },
+    faqPageSchema(faqs),
+  ],
   extraHead: `<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>`,
 };
@@ -179,19 +227,7 @@ const bodyHtml = `
 
       <div id="service-map" data-map role="img" aria-label="Map of the ProFix305 service area across Miami-Dade, Broward, and Palm Beach counties"></div>
 
-      <div class="grid service-area-grid">
-        <div class="area-card">
-          <h3>Miami-Dade</h3>
-          <p>Miami &bull; Hialeah &bull; Doral &bull; Coral Gables &bull; Homestead &bull; Kendall</p>
-        </div>
-        <div class="area-card">
-          <h3>Broward</h3>
-          <p>Fort Lauderdale &bull; Hollywood &bull; Pompano Beach &bull; Davie &bull; Sunrise</p>
-        </div>
-        <div class="area-card">
-          <h3>Palm Beach</h3>
-          <p>West Palm Beach &bull; Boca Raton &bull; Delray Beach &bull; Boynton Beach &bull; Jupiter</p>
-        </div>
+      <div class="grid service-area-grid">${areaCardsHtml}
       </div>
     </div>
   </section>
@@ -333,49 +369,18 @@ const bodyHtml = `
         <h2>Common Questions</h2>
       </div>
 
-      <div class="faq-list">
+      <div class="faq-list">${faqs
+        .map(
+          (f) => `
         <div class="faq-item">
           <button class="faq-question" aria-expanded="false">
-            How fast can a technician reach my location?
+            ${f.q}
             <span class="faq-icon" aria-hidden="true"></span>
           </button>
-          <div class="faq-answer"><p>Most calls across Miami-Dade, Broward, and Palm Beach are dispatched the same day, with emergency breakdowns prioritized first.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            Do you offer 24/7 emergency service?
-            <span class="faq-icon" aria-hidden="true"></span>
-          </button>
-          <div class="faq-answer"><p>Yes. Our emergency line is answered around the clock, seven days a week, because down equipment doesn't wait for business hours.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            What does a service call cost?
-            <span class="faq-icon" aria-hidden="true"></span>
-          </button>
-          <div class="faq-answer"><p>We provide a flat-rate quote after diagnosis, before any repair begins, so you always know the cost up front.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            What types of commercial equipment do you service?
-            <span class="faq-icon" aria-hidden="true"></span>
-          </button>
-          <div class="faq-answer"><p>Refrigeration, HVAC/AC, ice machines, mixers, exhaust hoods, and kitchen equipment across all major brands — including custom-built units.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            Can you set up a maintenance plan to prevent breakdowns?
-            <span class="faq-icon" aria-hidden="true"></span>
-          </button>
-          <div class="faq-answer"><p>Absolutely — scheduled maintenance plans across all your equipment are one of the most effective ways to avoid emergency downtime and extend equipment life.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            What areas do you serve?
-            <span class="faq-icon" aria-hidden="true"></span>
-          </button>
-          <div class="faq-answer"><p>We cover the full South Florida corridor from Miami-Dade through Broward to Palm Beach County.</p></div>
-        </div>
+          <div class="faq-answer"><p>${f.a}</p></div>
+        </div>`
+        )
+        .join('')}
       </div>
     </div>
   </section>

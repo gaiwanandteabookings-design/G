@@ -1,6 +1,7 @@
 const { PHONE_TEL, PHONE_DISPLAY, SITE_URL } = require('./layout');
 const { renderServiceIcon } = require('./icons');
 const { services } = require('../content/services');
+const { faqPageSchema, breadcrumbSchema } = require('./schema');
 
 function buildServicePage(service) {
   const otherServices = services.filter((s) => s.slug !== service.slug);
@@ -49,6 +50,7 @@ function buildServicePage(service) {
         <h2>${service.serviceName} Services</h2>
       </div>
       <ul class="bullet-grid">${bulletsHtml}</ul>
+      <p><a href="/pricing/${service.slug}/">See typical ${service.serviceName.toLowerCase()} pricing →</a></p>
     </div>
   </section>
 
@@ -88,24 +90,32 @@ function buildServicePage(service) {
     canonical: `/miami/${service.slug}/`,
     ogTitle: service.pageTitle,
     ogDescription: service.metaDescription,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Service',
-      serviceType: service.serviceName,
-      name: `${service.serviceName} | ProFix305`,
-      areaServed: [
-        { '@type': 'City', name: 'Miami' },
-        { '@type': 'City', name: 'Fort Lauderdale' },
-        { '@type': 'City', name: 'West Palm Beach' },
-      ],
-      provider: {
-        '@type': 'LocalBusiness',
-        name: 'ProFix305',
-        telephone: PHONE_TEL,
-        url: `${SITE_URL}/`,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        serviceType: service.serviceName,
+        name: `${service.serviceName} | ProFix305`,
+        areaServed: [
+          { '@type': 'City', name: 'Miami' },
+          { '@type': 'City', name: 'Fort Lauderdale' },
+          { '@type': 'City', name: 'West Palm Beach' },
+        ],
+        provider: {
+          '@type': 'LocalBusiness',
+          name: 'ProFix305',
+          telephone: PHONE_TEL,
+          url: `${SITE_URL}/`,
+        },
+        url: `${SITE_URL}/miami/${service.slug}/`,
       },
-      url: `${SITE_URL}/miami/${service.slug}/`,
-    },
+      faqPageSchema(service.faqs),
+      breadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Services', path: '/#services' },
+        { name: service.serviceName },
+      ]),
+    ],
     bodyHtml,
   };
 }

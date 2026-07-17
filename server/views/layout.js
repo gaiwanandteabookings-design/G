@@ -105,7 +105,31 @@ function footer() {
 
 <a href="tel:${PHONE_TEL}" class="mobile-call-fab" aria-label="Call ProFix305 now">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 3.5c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z" fill="currentColor"/></svg>
-</a>`;
+</a>
+
+<div class="chat-widget" id="chat-widget">
+  <button class="chat-launcher" id="chat-launcher" aria-expanded="false" aria-controls="chat-panel" aria-label="Chat to get a fast quote">
+    <span class="chat-launcher-icon" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4.4 3.3A.5.5 0 0 1 4 20.1V17H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <span class="chat-close-icon" aria-hidden="true">&times;</span>
+    </span>
+    <span class="chat-launcher-label">Get a Fast Quote</span>
+  </button>
+
+  <div class="chat-panel" id="chat-panel" hidden>
+    <div class="chat-panel-header">
+      <span>ProFix305 Dispatch</span>
+      <button class="chat-close" id="chat-close" aria-label="Close chat">&times;</button>
+    </div>
+    <div class="chat-panel-body" id="chat-body"></div>
+  </div>
+</div>`;
+}
+
+function renderJsonLd(jsonLd) {
+  if (!jsonLd) return '';
+  const items = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+  return items.map((item) => `<script type="application/ld+json">\n${JSON.stringify(item, null, 2)}\n</script>\n`).join('');
 }
 
 function renderLayout({ title, description, keywords, canonical, ogTitle, ogDescription, jsonLd, extraHead, bodyHtml }) {
@@ -136,7 +160,7 @@ ${keywords ? `<meta name="keywords" content="${keywords}" />\n` : ''}<link rel="
 
 <link rel="stylesheet" href="/css/styles.css" />
 <link rel="icon" href="${FAVICON}" />
-${jsonLd ? `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>\n` : ''}${extraHead || ''}${analytics()}
+${renderJsonLd(jsonLd)}${extraHead || ''}${analytics()}
 </head>
 <body>
 
@@ -151,6 +175,7 @@ ${bodyHtml}
 ${footer()}
 
 <script src="/js/main.js"></script>
+<script src="/js/chat-widget.js" defer></script>
 </body>
 </html>
 `;
