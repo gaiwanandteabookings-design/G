@@ -1,19 +1,38 @@
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
 const db = require('./db');
-const { notifyNewBooking, smtpConfigured } = require('./mailer');
-const { renderLayout } = require('./views/layout');
+const { notifyNewBooking, sendBookingConfirmation, smtpConfigured } = require('./mailer');
+const { renderLayout, SITE_URL } = require('./views/layout');
 const { buildServicePage } = require('./views/servicePage');
+const { buildLegalPage } = require('./views/legalPage');
 const home = require('./content/home');
 const { services } = require('./content/services');
-const { SITE_URL } = require('./views/layout');
+const { privacyPolicy, termsOfService } = require('./content/legal');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// Set this env var to true only when the app runs behind a reverse proxy / hosting
+// platform (Render, Railway, nginx, etc.) that sets X-Forwarded-* headers, so
+// req.secure and the rate limiter see the real client IP/protocol instead of the proxy's.
+if (process.env.TRUST_PROXY === 'true') {
+  app.set('trust proxy', 1);
+}
+
+app.use(helmet({ contentSecurityPolicy: false }));
+
+if (IS_PRODUCTION) {
+  app.use((req, res, next) => {
+    if (req.secure || req.get('x-forwarded-proto') === 'https') return next();
+    res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
+  });
+}
 
 app.use(express.json({ limit: '20kb' }));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
@@ -26,6 +45,14 @@ services.forEach((service) => {
   app.get(`/miami/${service.slug}`, (req, res) => {
     res.type('html').send(renderLayout(buildServicePage(service)));
   });
+});
+
+app.get(`/${privacyPolicy.slug}`, (req, res) => {
+  res.type('html').send(renderLayout(buildLegalPage(privacyPolicy)));
+});
+
+app.get(`/${termsOfService.slug}`, (req, res) => {
+  res.type('html').send(renderLayout(buildLegalPage(termsOfService)));
 });
 
 app.get('/sitemap.xml', (req, res) => {
@@ -118,6 +145,7 @@ app.post('/api/bookings', async (req, res) => {
     const id = db.insertBooking(data);
     const booking = db.getBooking(id);
     notifyNewBooking(booking).catch(() => {});
+    sendBookingConfirmation(booking).catch(() => {});
     return res.status(201).json({ ok: true, id });
   } catch (err) {
     console.error('[api] Ошибка сохранения заявки:', err);
@@ -153,6 +181,30 @@ app.patch('/api/bookings/:id/status', requireAdmin, (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, smtpConfigured });
+});
+
+app.use((req, res) => {
+  const bodyHtml = `
+  <section class="section error-page">
+    <div class="container">
+      <p class="error-code">404</p>
+      <h1>Page Not Found</h1>
+      <p>The page you're looking for doesn't exist or may have moved. Try one of the links below, or call us directly.</p>
+      <div class="hero-cta">
+        <a href="/" class="btn btn-primary btn-lg">Back to Home</a>
+        <a href="tel:+13055550199" class="btn btn-outline btn-lg" style="border-color: var(--color-navy-700); color: var(--color-navy-800);">Call (305) 555-0199</a>
+      </div>
+    </div>
+  </section>
+`;
+  res.status(404).type('html').send(
+    renderLayout({
+      title: 'Page Not Found | ProFix305',
+      description: 'The page you requested could not be found.',
+      canonical: '/404',
+      bodyHtml,
+    })
+  );
 });
 
 app.listen(PORT, () => {

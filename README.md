@@ -19,19 +19,24 @@ for SEO, and a small Express/SQLite backend that captures booking requests.
 
 ```
 server/
-  server.js            Express app, API routes, page routes, sitemap.xml
+  server.js            Express app, API routes, page routes, sitemap.xml, 404 handler
   db.js                SQLite schema + queries
-  mailer.js            optional email notification on new booking
+  mailer.js            booking notification (to you) + confirmation email (to customer)
   .env.example         copy to .env and fill in real values
   views/
-    layout.js          shared <head>/header/footer wrapper for every page
+    layout.js          shared <head>/header/footer wrapper for every page (brand, phone,
+                        email, GA4 snippet — edit constants here to rebrand the whole site)
     servicePage.js      builds one service landing page from a service definition
+    legalPage.js         builds Privacy Policy / Terms of Service pages
   content/
     home.js             homepage copy + meta
     services.js          the 6 service definitions (edit this to add/change a service)
+    legal.js              Privacy Policy / Terms of Service text
   public/
     admin.html           token-gated page to view/manage booking leads
     robots.txt
+    favicon.ico
+    images/og-cover.jpg   social share preview image
     css/styles.css
     js/main.js
 ```
@@ -52,8 +57,9 @@ npm start               # http://localhost:3000
 
 Pages: `/`, `/miami/commercial-refrigeration-repair/`, `/miami/commercial-hvac-ac-repair/`,
 `/miami/commercial-ice-machine-repair/`, `/miami/commercial-kitchen-equipment-repair/`,
-`/miami/commercial-mixer-repair/`, `/miami/commercial-exhaust-hood-repair/`, plus
-`/sitemap.xml` and `/robots.txt`.
+`/miami/commercial-mixer-repair/`, `/miami/commercial-exhaust-hood-repair/`,
+`/privacy-policy/`, `/terms-of-service/`, plus `/sitemap.xml` and `/robots.txt`. Unknown
+URLs get a branded 404 page instead of Express's default error page.
 
 Booking requests submitted on the site are stored in `server/data/bookings.db` (SQLite,
 git-ignored). View/manage them at `http://localhost:3000/admin.html` using the
@@ -75,10 +81,45 @@ with **placeholder business details** that must be replaced before launch:
   verifiable customer reviews before launch — publishing fabricated testimonials on a
   commercial site is both a trust issue and a legal risk (FTC endorsement guidelines).
 - **`ADMIN_TOKEN`** in `.env` — set a real random secret, never commit `.env`.
-- **SMTP credentials** in `.env` if you want email alerts on new bookings; without them,
-  bookings are still saved to the database, just not emailed.
-- **`images/og-cover.jpg`** referenced in the JSON-LD/Open Graph tags doesn't exist yet —
-  add a real image or remove the reference.
+- **SMTP credentials** in `.env` if you want email alerts on new bookings (both the
+  internal notification to you and the automatic confirmation email to the customer);
+  without them, bookings are still saved to the database, just not emailed.
+- **Privacy Policy / Terms of Service** (`content/legal.js`) are a generic starting
+  template, not a substitute for review by a Florida-licensed attorney — have them
+  checked before relying on them, especially once you're running paid ads.
+
+## Production deployment
+
+The app is a plain Node process (`npm start`) with a file-based SQLite database — it runs
+on almost any Node host. Rough checklist to take it from "runs on my machine" to live:
+
+1. **Pick a host.** Simplest options for a small Node app: Render, Railway, or Fly.io
+   (push the repo, set environment variables in their dashboard, done — they handle
+   HTTPS certificates automatically). A plain VPS (DigitalOcean, Linode) works too, but
+   then you're responsible for a process manager and a reverse proxy yourself:
+   - Process manager: `pm2 start server.js --name profix305` keeps it running and
+     restarts it on crash/reboot.
+   - Reverse proxy + HTTPS: nginx in front of the Node process, with a free TLS
+     certificate from Let's Encrypt (`certbot --nginx`).
+2. **Persistent disk for the database.** `server/data/bookings.db` must live on a disk
+   that survives redeploys. Render/Railway/Fly all support a small persistent volume —
+   without one, every deploy wipes your booking history. A VPS's disk is already
+   persistent by default.
+3. **Environment variables to set on the host** (mirror of `.env.example`):
+   `PORT`, `NODE_ENV=production`, `TRUST_PROXY=true` (if behind Render/Railway/nginx),
+   `ADMIN_TOKEN`, `SMTP_*` + `NOTIFY_EMAIL` + `FROM_EMAIL` (if you want email), and
+   `GA_MEASUREMENT_ID` (if you set up Google Analytics — see below).
+4. **Domain & DNS.** Buy the domain (e.g. from Namecheap, Google Domains successor,
+   Cloudflare), then point it at your host: usually an `A` record to the host's IP, or a
+   `CNAME` to the hostname the platform gives you (Render/Railway/Fly all document this).
+   DNS changes can take up to ~24-48 hours to fully propagate.
+5. **Google Analytics 4 (optional but recommended).** Create a GA4 property at
+   analytics.google.com, copy the Measurement ID (`G-XXXXXXX`), set it as
+   `GA_MEASUREMENT_ID` in your environment — the tracking snippet and a `generate_lead`
+   event on successful bookings are already wired up, they just need the ID to activate.
+6. **Google Search Console.** Verify your domain at search.google.com/search-console,
+   then submit `https://yourdomain.com/sitemap.xml` so all pages get crawled quickly
+   instead of waiting for Google to find them on its own.
 
 ## SEO — what actually moves rankings (read this before asking "why aren't we #1")
 

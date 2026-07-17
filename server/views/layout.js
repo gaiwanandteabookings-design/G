@@ -5,6 +5,19 @@ const SITE_URL = 'https://www.profix305.com';
 const PHONE_DISPLAY = '(305) 555-0199';
 const PHONE_TEL = '+13055550199';
 const EMAIL = 'booking@profix305.com';
+const GA_MEASUREMENT_ID = process.env.GA_MEASUREMENT_ID || '';
+
+function analytics() {
+  if (!GA_MEASUREMENT_ID) return '';
+  return `
+<script async src="https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${GA_MEASUREMENT_ID}');
+</script>`;
+}
 
 function header() {
   return `
@@ -82,7 +95,9 @@ function footer() {
   </div>
 
   <div class="footer-bottom container">
-    <p>&copy; <span id="year"></span> ProFix305. All rights reserved. License #CACXXXXXXX (placeholder).</p>
+    <p>&copy; <span id="year"></span> ProFix305. All rights reserved. License #CACXXXXXXX (placeholder). &middot;
+    <a href="/privacy-policy/">Privacy Policy</a> &middot;
+    <a href="/terms-of-service/">Terms of Service</a></p>
   </div>
 </footer>
 
@@ -106,7 +121,12 @@ ${keywords ? `<meta name="keywords" content="${keywords}" />\n` : ''}<link rel="
 <meta property="og:title" content="${ogTitle || title}" />
 <meta property="og:description" content="${ogDescription || description}" />
 <meta property="og:url" content="${canonicalUrl}" />
+<meta property="og:image" content="${SITE_URL}/images/og-cover.jpg" />
 <meta property="og:locale" content="en_US" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${ogTitle || title}" />
+<meta name="twitter:description" content="${ogDescription || description}" />
+<meta name="twitter:image" content="${SITE_URL}/images/og-cover.jpg" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -114,7 +134,8 @@ ${keywords ? `<meta name="keywords" content="${keywords}" />\n` : ''}<link rel="
 
 <link rel="stylesheet" href="/css/styles.css" />
 <link rel="icon" href="${FAVICON}" />
-${jsonLd ? `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>\n` : ''}</head>
+${jsonLd ? `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>\n` : ''}${analytics()}
+</head>
 <body>
 
 <a class="skip-link" href="#main">Skip to content</a>

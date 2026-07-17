@@ -595,6 +595,31 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* ==========================================================================
+   Legal pages & 404
+   ========================================================================== */
+.legal-container { max-width: 760px; }
+.legal-updated { font-size: 0.85rem; color: var(--color-slate-500); margin-bottom: 32px; }
+.legal-body h3 { margin-top: 32px; font-size: 1.15rem; }
+.legal-body p { font-size: 0.98rem; line-height: 1.7; }
+.legal-body a { color: var(--color-navy-800); text-decoration: underline; }
+
+.error-page {
+  text-align: center;
+  padding: 100px 24px 120px;
+}
+.error-page .error-code {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 10vw, 7rem);
+  font-weight: 700;
+  color: var(--color-cyan-400);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.error-page h1 { font-size: clamp(1.5rem, 3vw, 2rem); }
+.error-page p { max-width: 46ch; margin-left: auto; margin-right: auto; }
+.error-page .hero-cta { justify-content: center; margin-top: 24px; }
+
+/* ==========================================================================
    Footer
    ========================================================================== */
 .site-footer { background: var(--color-ink); color: var(--color-slate-300); padding-top: 56px; }

@@ -49,4 +49,35 @@ async function notifyNewBooking(booking) {
   }
 }
 
-module.exports = { notifyNewBooking, smtpConfigured };
+async function sendBookingConfirmation(booking) {
+  if (!transporter || !booking.email) return;
+
+  const lines = [
+    `Hi ${booking.name},`,
+    ``,
+    `Thanks for reaching out to ProFix305. We've received your repair request (#${booking.id}) and our dispatch team will call you shortly at ${booking.phone} to confirm the appointment.`,
+    ``,
+    `Request summary:`,
+    `Equipment: ${booking.equipment_type}`,
+    `Address: ${booking.address}`,
+    `Urgency: ${booking.urgency}`,
+    `Issue: ${booking.issue_description}`,
+    ``,
+    `If this is an active emergency, you can also call us directly at (305) 555-0199.`,
+    ``,
+    `— ProFix305`,
+  ];
+
+  try {
+    await transporter.sendMail({
+      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
+      to: booking.email,
+      subject: `We received your repair request (#${booking.id}) — ProFix305`,
+      text: lines.join('\n'),
+    });
+  } catch (err) {
+    console.error('[mailer] Не удалось отправить письмо-подтверждение клиенту:', err.message);
+  }
+}
+
+module.exports = { notifyNewBooking, sendBookingConfirmation, smtpConfigured };

@@ -80,6 +80,9 @@
         form.reset();
         statusEl.textContent = `Thanks! Your request (#${data.id}) was received — our dispatch team will call you shortly to confirm.`;
         statusEl.setAttribute('data-state', 'success');
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'generate_lead', { transaction_id: String(data.id) });
+        }
       } else {
         statusEl.textContent = data.error || 'Something went wrong. Please call us instead.';
         statusEl.setAttribute('data-state', 'error');
