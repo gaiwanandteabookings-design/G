@@ -1,26 +1,31 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const { PHONE_DISPLAY } = require('./views/layout');
 
-const smtpConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+// Render's free plan blocks outbound SMTP (ports 25/465/587) entirely, so raw
+// SMTP (nodemailer + Gmail) can never work there — connections just hang until
+// they time out. SendGrid's API sends over plain HTTPS instead, which isn't blocked.
+const mailConfigured = Boolean(process.env.SENDGRID_API_KEY);
+if (mailConfigured) sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const transporter = smtpConfigured
-  ? nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
-  : null;
+function parseFrom(raw) {
+  const match = /^(.*)<(.+)>$/.exec(raw || '');
+  if (match) return { name: match[1].trim().replace(/^"|"$/g, ''), email: match[2].trim() };
+  return { email: raw };
+}
+
+async function send(msg) {
+  if (!mailConfigured) return { ok: false, error: 'Email is not configured on the server yet — set SENDGRID_API_KEY.' };
+  try {
+    await sgMail.send(msg);
+    return { ok: true };
+  } catch (err) {
+    const detail = err.response?.body?.errors?.map((e) => e.message).join('; ') || err.message;
+    console.error('[mailer] Не удалось отправить письмо:', detail);
+    return { ok: false, error: detail };
+  }
+}
 
 async function notifyNewBooking(booking) {
-  if (!transporter) {
-    console.log(`[mailer] SMTP не настроен — письмо о заявке #${booking.id} не отправлено (заявка сохранена в БД).`);
-    return;
-  }
-
   const to = process.env.NOTIFY_EMAIL;
   if (!to) return;
 
@@ -38,20 +43,16 @@ async function notifyNewBooking(booking) {
     `Описание проблемы: ${booking.issue_description}`,
   ];
 
-  try {
-    await transporter.sendMail({
-      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
-      to,
-      subject: `Новая заявка на ремонт (#${booking.id}) — ${booking.urgency === 'emergency' ? 'СРОЧНО' : 'плановая'}`,
-      text: lines.join('\n'),
-    });
-  } catch (err) {
-    console.error('[mailer] Не удалось отправить письмо:', err.message);
-  }
+  await send({
+    to,
+    from: parseFrom(process.env.FROM_EMAIL),
+    subject: `Новая заявка на ремонт (#${booking.id}) — ${booking.urgency === 'emergency' ? 'СРОЧНО' : 'плановая'}`,
+    text: lines.join('\n'),
+  });
 }
 
 async function sendBookingConfirmation(booking) {
-  if (!transporter || !booking.email) return;
+  if (!booking.email) return;
 
   const lines = [
     `Hi ${booking.name},`,
@@ -69,22 +70,15 @@ async function sendBookingConfirmation(booking) {
     `— ProFix305`,
   ];
 
-  try {
-    await transporter.sendMail({
-      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
-      to: booking.email,
-      subject: `We received your repair request (#${booking.id}) — ProFix305`,
-      text: lines.join('\n'),
-    });
-  } catch (err) {
-    console.error('[mailer] Не удалось отправить письмо-подтверждение клиенту:', err.message);
-  }
+  await send({
+    to: booking.email,
+    from: parseFrom(process.env.FROM_EMAIL),
+    subject: `We received your repair request (#${booking.id}) — ProFix305`,
+    text: lines.join('\n'),
+  });
 }
 
 async function sendInvoiceEmail(invoice, pdfBuffer, viewUrl) {
-  if (!transporter) {
-    return { ok: false, error: 'SMTP is not configured on the server yet — set SMTP_* env vars.' };
-  }
   if (!invoice.customer_email) {
     return { ok: false, error: 'This invoice has no customer email address on file.' };
   }
@@ -106,25 +100,20 @@ async function sendInvoiceEmail(invoice, pdfBuffer, viewUrl) {
     `— ProFix305`,
   ].filter(Boolean);
 
-  try {
-    await transporter.sendMail({
-      from: process.env.FROM_EMAIL || process.env.SMTP_USER,
-      to: invoice.customer_email,
-      subject: `Invoice ${num} from ProFix305 — ${formatMoney(total)} due`,
-      text: lines.join('\n'),
-      attachments: [
-        {
-          filename: `${num}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf',
-        },
-      ],
-    });
-    return { ok: true };
-  } catch (err) {
-    console.error('[mailer] Не удалось отправить инвойс:', err.message);
-    return { ok: false, error: 'Failed to send email — check SMTP settings.' };
-  }
+  return send({
+    to: invoice.customer_email,
+    from: parseFrom(process.env.FROM_EMAIL),
+    subject: `Invoice ${num} from ProFix305 — ${formatMoney(total)} due`,
+    text: lines.join('\n'),
+    attachments: [
+      {
+        filename: `${num}.pdf`,
+        content: pdfBuffer.toString('base64'),
+        type: 'application/pdf',
+        disposition: 'attachment',
+      },
+    ],
+  });
 }
 
-module.exports = { notifyNewBooking, sendBookingConfirmation, sendInvoiceEmail, smtpConfigured };
+module.exports = { notifyNewBooking, sendBookingConfirmation, sendInvoiceEmail, mailConfigured };
