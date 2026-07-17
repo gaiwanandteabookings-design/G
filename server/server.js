@@ -11,7 +11,6 @@ const { buildLegalPage } = require('./views/legalPage');
 const { buildInvoiceView } = require('./views/invoiceView');
 const { buildPricingPage } = require('./views/pricingPage');
 const { buildAreaPage } = require('./views/areaPage');
-const { buildAlternativePage } = require('./views/alternativePage');
 const { buildInvoicePdf } = require('./pdf');
 const { invoiceNumber } = require('./invoiceUtils');
 const home = require('./content/home');
@@ -67,10 +66,6 @@ areas.forEach((area) => {
   });
 });
 
-app.get('/alternative-to-baro-service', (req, res) => {
-  res.type('html').send(renderLayout(buildAlternativePage()));
-});
-
 app.get(`/${privacyPolicy.slug}`, (req, res) => {
   res.type('html').send(renderLayout(buildLegalPage(privacyPolicy)));
 });
@@ -100,7 +95,6 @@ app.get('/sitemap.xml', (req, res) => {
     ...services.map((s) => ({ loc: `${SITE_URL}/miami/${s.slug}/`, priority: '0.8' })),
     ...services.filter((s) => pricing[s.slug]).map((s) => ({ loc: `${SITE_URL}/pricing/${s.slug}/`, priority: '0.6' })),
     ...areas.map((a) => ({ loc: `${SITE_URL}/areas/${a.slug}/`, priority: '0.6' })),
-    { loc: `${SITE_URL}/alternative-to-baro-service/`, priority: '0.5' },
   ];
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
