@@ -166,6 +166,23 @@ button { font-family: inherit; cursor: pointer; }
   transition: color .15s ease;
 }
 .main-nav a:hover { color: var(--color-white); }
+.main-nav a.nav-login {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-cyan-400);
+  border: 1px solid rgba(53, 208, 224, 0.35);
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+.main-nav a.nav-login::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-cyan-400);
+}
+.main-nav a.nav-login:hover { color: var(--color-white); border-color: var(--color-cyan-400); }
 
 .header-actions { display: flex; align-items: center; gap: 18px; }
 .phone-link {
