@@ -1,5 +1,6 @@
 const sgMail = require('@sendgrid/mail');
-const { PHONE_DISPLAY } = require('./views/layout');
+const { PHONE_DISPLAY, PHONE_TEL, SITE_URL } = require('./views/layout');
+const { wrapEmail, detailRow, detailTable, escapeHtml } = require('./emailTemplates');
 
 // Render's free plan blocks outbound SMTP (ports 25/465/587) entirely, so raw
 // SMTP (nodemailer + Gmail) can never work there — connections just hang until
@@ -29,6 +30,8 @@ async function notifyNewBooking(booking) {
   const to = process.env.NOTIFY_EMAIL;
   if (!to) return;
 
+  const isEmergency = booking.urgency === 'emergency';
+
   const lines = [
     `Новая заявка на ремонт #${booking.id}`,
     ``,
@@ -43,11 +46,32 @@ async function notifyNewBooking(booking) {
     `Описание проблемы: ${booking.issue_description}`,
   ];
 
+  const html = wrapEmail({
+    eyebrow: isEmergency ? 'Срочная заявка' : 'Новая заявка',
+    heading: `Заявка на ремонт #${booking.id}`,
+    bodyHtml:
+      detailTable([
+        detailRow('Имя', booking.name),
+        detailRow('Телефон', booking.phone),
+        detailRow('Email', booking.email),
+        detailRow('Компания/объект', booking.business_name),
+        detailRow('Адрес', booking.address),
+        detailRow('Оборудование', booking.equipment_type),
+        detailRow('Срочность', booking.urgency),
+        detailRow('Желаемая дата/время', [booking.preferred_date, booking.preferred_time].filter(Boolean).join(' ')),
+      ]) +
+      `<p style="margin:0 0 4px;color:#0c1b2e;font-size:13px;font-weight:600;">Описание проблемы</p>
+       <p style="margin:0 0 4px;color:#5a6b82;font-size:14px;line-height:1.6;">${escapeHtml(booking.issue_description)}</p>`,
+    ctaLabel: 'Open Admin Dashboard',
+    ctaUrl: `${SITE_URL}/admin.html`,
+  });
+
   await send({
     to,
     from: parseFrom(process.env.FROM_EMAIL),
-    subject: `Новая заявка на ремонт (#${booking.id}) — ${booking.urgency === 'emergency' ? 'СРОЧНО' : 'плановая'}`,
+    subject: `Новая заявка на ремонт (#${booking.id}) — ${isEmergency ? 'СРОЧНО' : 'плановая'}`,
     text: lines.join('\n'),
+    html,
   });
 }
 
@@ -70,11 +94,26 @@ async function sendBookingConfirmation(booking) {
     `— ProFix305`,
   ];
 
+  const html = wrapEmail({
+    eyebrow: 'Request Received',
+    heading: `Thanks, ${booking.name} — we've got your request`,
+    intro: `We've received your repair request <strong>#${booking.id}</strong> and our dispatch team will call you shortly at ${escapeHtml(booking.phone)} to confirm the appointment.`,
+    bodyHtml: detailTable([
+      detailRow('Equipment', booking.equipment_type),
+      detailRow('Address', booking.address),
+      detailRow('Urgency', booking.urgency),
+      detailRow('Issue', booking.issue_description),
+    ]),
+    ctaLabel: `Call ${PHONE_DISPLAY}`,
+    ctaUrl: `tel:${PHONE_TEL}`,
+  });
+
   await send({
     to: booking.email,
     from: parseFrom(process.env.FROM_EMAIL),
     subject: `We received your repair request (#${booking.id}) — ProFix305`,
     text: lines.join('\n'),
+    html,
   });
 }
 
@@ -100,11 +139,21 @@ async function sendInvoiceEmail(invoice, pdfBuffer, viewUrl) {
     `— ProFix305`,
   ].filter(Boolean);
 
+  const html = wrapEmail({
+    eyebrow: 'Invoice',
+    heading: `Invoice ${num} — ${formatMoney(total)} due`,
+    intro: `Please find your invoice from ProFix305 attached as a PDF.${invoice.notes ? ` <br/><br/><em>${escapeHtml(invoice.notes)}</em>` : ''}`,
+    bodyHtml: `<p style="margin:0;color:#5a6b82;font-size:13px;">Questions about this invoice? Just reply to this email or call us at ${PHONE_DISPLAY}.</p>`,
+    ctaLabel: 'View Invoice Online',
+    ctaUrl: viewUrl,
+  });
+
   return send({
     to: invoice.customer_email,
     from: parseFrom(process.env.FROM_EMAIL),
     subject: `Invoice ${num} from ProFix305 — ${formatMoney(total)} due`,
     text: lines.join('\n'),
+    html,
     attachments: [
       {
         filename: `${num}.pdf`,
