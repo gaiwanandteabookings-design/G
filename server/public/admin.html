@@ -104,7 +104,7 @@
   <p class="sub">Sign in to manage bookings and invoices.</p>
   <div class="field">
     <label for="username-input">Username</label>
-    <input type="text" id="username-input" autocomplete="username" />
+    <input type="text" id="username-input" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" />
   </div>
   <div class="field">
     <label for="password-input">Password</label>
@@ -245,7 +245,7 @@
 
   document.getElementById('gate-submit').addEventListener('click', async () => {
     const username = usernameInput.value.trim();
-    const password = passwordInput.value;
+    const password = passwordInput.value.trim();
     if (!username || !password) return;
     try {
       const res = await fetch('/api/admin/login', {
