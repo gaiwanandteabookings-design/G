@@ -44,6 +44,7 @@ function header() {
       <a href="/#reviews">Reviews</a>
       <a href="/#faq">FAQ</a>
       <a href="/#contact">Contact</a>
+      <a href="/admin.html" class="nav-login">Staff Login</a>
     </nav>
 
     <div class="header-actions">
@@ -97,7 +98,8 @@ function footer() {
   <div class="footer-bottom container">
     <p>&copy; <span id="year"></span> ProFix305. All rights reserved. &middot;
     <a href="/privacy-policy/">Privacy Policy</a> &middot;
-    <a href="/terms-of-service/">Terms of Service</a></p>
+    <a href="/terms-of-service/">Terms of Service</a> &middot;
+    <a href="/admin.html">Staff Login</a></p>
   </div>
 </footer>
 
