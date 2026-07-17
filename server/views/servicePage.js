@@ -1,4 +1,5 @@
 const { PHONE_TEL, PHONE_DISPLAY, SITE_URL } = require('./layout');
+const { renderServiceIcon } = require('./icons');
 const { services } = require('../content/services');
 
 function buildServicePage(service) {
@@ -20,7 +21,7 @@ function buildServicePage(service) {
     .join('');
 
   const relatedHtml = otherServices
-    .map((s) => `<a href="/miami/${s.slug}/">${s.cardTitle}</a>`)
+    .map((s) => `<a href="/miami/${s.slug}/">${renderServiceIcon(s.slug, 18)}<span>${s.cardTitle}</span></a>`)
     .join('');
 
   const bodyHtml = `
@@ -30,6 +31,7 @@ function buildServicePage(service) {
 
   <section class="service-hero">
     <div class="container">
+      <div class="service-hero-icon">${renderServiceIcon(service.slug, 34)}</div>
       <p class="eyebrow">${service.heroEyebrow} &bull; Miami-Dade &bull; Broward &bull; Palm Beach</p>
       <h1>${service.heroHeadline}</h1>
       <p class="hero-sub">${service.heroSub}</p>

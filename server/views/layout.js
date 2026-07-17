@@ -106,7 +106,7 @@ function footer() {
 </a>`;
 }
 
-function renderLayout({ title, description, keywords, canonical, ogTitle, ogDescription, jsonLd, bodyHtml }) {
+function renderLayout({ title, description, keywords, canonical, ogTitle, ogDescription, jsonLd, extraHead, bodyHtml }) {
   const canonicalUrl = `${SITE_URL}${canonical}`;
   return `<!DOCTYPE html>
 <html lang="en">
@@ -134,7 +134,7 @@ ${keywords ? `<meta name="keywords" content="${keywords}" />\n` : ''}<link rel="
 
 <link rel="stylesheet" href="/css/styles.css" />
 <link rel="icon" href="${FAVICON}" />
-${jsonLd ? `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>\n` : ''}${analytics()}
+${jsonLd ? `<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>\n` : ''}${extraHead || ''}${analytics()}
 </head>
 <body>
 
