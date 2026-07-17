@@ -96,7 +96,10 @@
     }
 
     function goTo(i) {
-      slides[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+      // Scroll only the carousel track itself (horizontal), never the page —
+      // element.scrollIntoView() here would also drag the whole page's vertical
+      // scroll position toward the carousel whenever it's off-screen.
+      track.scrollTo({ left: slides[i].offsetLeft, behavior: 'smooth' });
       setActive(i);
     }
 
@@ -118,11 +121,23 @@
     );
     slides.forEach((s) => slideObserver.observe(s));
 
-    carousel.addEventListener('mouseenter', stopAuto);
-    carousel.addEventListener('mouseleave', startAuto);
-    carousel.addEventListener('touchstart', stopAuto, { passive: true });
+    // Only auto-advance while the carousel is actually on screen.
+    let carouselVisible = false;
+    const visibilityObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          carouselVisible = entry.isIntersecting;
+          if (carouselVisible) startAuto();
+          else stopAuto();
+        });
+      },
+      { threshold: 0.3 }
+    );
+    visibilityObserver.observe(carousel);
 
-    startAuto();
+    carousel.addEventListener('mouseenter', stopAuto);
+    carousel.addEventListener('mouseleave', () => { if (carouselVisible) startAuto(); });
+    carousel.addEventListener('touchstart', stopAuto, { passive: true });
   }
 
   // Booking form submit
