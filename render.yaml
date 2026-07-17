@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: profix305
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.11.0
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "true"
+      - key: ADMIN_TOKEN
+        generateValue: true
