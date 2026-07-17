@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const path = require('node:path');
 
 const db = require('./db');
-const { notifyNewBooking, sendBookingConfirmation, smtpConfigured } = require('./mailer');
+const { notifyNewBooking, sendBookingConfirmation, mailConfigured } = require('./mailer');
 const { renderLayout, SITE_URL, PHONE_TEL, PHONE_DISPLAY } = require('./views/layout');
 const { buildServicePage } = require('./views/servicePage');
 const { buildLegalPage } = require('./views/legalPage');
@@ -209,7 +209,7 @@ app.patch('/api/bookings/:id/status', auth.requireAdmin, (req, res) => {
 app.use('/api/invoices', invoiceRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, smtpConfigured });
+  res.json({ ok: true, mailConfigured });
 });
 
 app.use((req, res) => {
@@ -241,7 +241,7 @@ app.listen(PORT, () => {
   if (!auth.ADMIN_USERNAME || !auth.ADMIN_PASSWORD) {
     console.warn('[warn] ADMIN_USERNAME/ADMIN_PASSWORD не заданы в .env — вход в /admin.html не будет работать.');
   }
-  if (!smtpConfigured) {
-    console.warn('[warn] SMTP не настроен — email-уведомления о заявках отключены (заявки всё равно сохраняются в БД).');
+  if (!mailConfigured) {
+    console.warn('[warn] SENDGRID_API_KEY не задан — email-уведомления о заявках отключены (заявки всё равно сохраняются в БД).');
   }
 });
