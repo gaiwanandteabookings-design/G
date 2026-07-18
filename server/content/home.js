@@ -362,6 +362,16 @@ const bodyHtml = `
           </div>
         </div>
 
+        <div class="form-field" id="equipment-detail-wrap" hidden>
+          <label for="equipment-detail-select">Specific Equipment</label>
+          <select id="equipment-detail-select"></select>
+        </div>
+        <div class="form-field" id="equipment-detail-other-wrap" hidden>
+          <label for="equipment-detail-other">Please Specify Equipment</label>
+          <input type="text" id="equipment-detail-other" placeholder="e.g. Bar Cooler" maxlength="160" />
+        </div>
+        <input type="hidden" id="equipmentDetail" name="equipmentDetail" />
+
         <div class="form-row">
           <div class="form-field">
             <label for="preferredDate">Preferred Date</label>

@@ -158,6 +158,57 @@
     carousel.addEventListener('touchstart', stopAuto, { passive: true });
   }
 
+  // Cascading "specific equipment" picker — populates from the category chosen above,
+  // with a trailing "Other — please specify" option that reveals a free-text field.
+  const equipmentTypeSelect = document.getElementById('equipmentType');
+  if (equipmentTypeSelect) {
+    const dataEl = document.getElementById('equipment-data');
+    const categories = dataEl ? JSON.parse(dataEl.textContent) : [];
+    const detailWrap = document.getElementById('equipment-detail-wrap');
+    const detailSelect = document.getElementById('equipment-detail-select');
+    const otherWrap = document.getElementById('equipment-detail-other-wrap');
+    const otherInput = document.getElementById('equipment-detail-other');
+    const hiddenDetail = document.getElementById('equipmentDetail');
+    const OTHER_VALUE = '__other__';
+
+    function syncHiddenDetail() {
+      if (!otherWrap.hidden) {
+        hiddenDetail.value = otherInput.value.trim();
+      } else if (!detailWrap.hidden && detailSelect.value && detailSelect.value !== OTHER_VALUE) {
+        hiddenDetail.value = detailSelect.value;
+      } else {
+        hiddenDetail.value = '';
+      }
+    }
+
+    equipmentTypeSelect.addEventListener('change', () => {
+      const category = categories.find((c) => c.slug === equipmentTypeSelect.value);
+      otherWrap.hidden = true;
+      otherInput.value = '';
+
+      if (category) {
+        detailSelect.innerHTML =
+          `<option value="" disabled selected>Select ${category.label.toLowerCase()}</option>` +
+          category.items.map((item) => `<option value="${item}">${item}</option>`).join('') +
+          `<option value="${OTHER_VALUE}">Other — please specify</option>`;
+        detailWrap.hidden = false;
+      } else {
+        detailWrap.hidden = true;
+        // The top-level "Other" option has no item list — go straight to free text.
+        otherWrap.hidden = equipmentTypeSelect.value !== 'other';
+      }
+      syncHiddenDetail();
+    });
+
+    detailSelect.addEventListener('change', () => {
+      otherWrap.hidden = detailSelect.value !== OTHER_VALUE;
+      if (!otherWrap.hidden) otherInput.focus();
+      syncHiddenDetail();
+    });
+
+    otherInput.addEventListener('input', syncHiddenDetail);
+  }
+
   // Booking form submit
   const form = document.getElementById('booking-form');
   const statusEl = document.getElementById('form-status');

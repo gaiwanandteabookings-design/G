@@ -17,6 +17,7 @@ db.exec(`
     business_name TEXT,
     address TEXT NOT NULL,
     equipment_type TEXT NOT NULL,
+    equipment_detail TEXT,
     issue_description TEXT NOT NULL,
     urgency TEXT NOT NULL,
     preferred_date TEXT,
@@ -29,9 +30,9 @@ db.exec(`
 
 const insertBookingStmt = db.prepare(`
   INSERT INTO bookings (
-    name, phone, email, business_name, address, equipment_type,
+    name, phone, email, business_name, address, equipment_type, equipment_detail,
     issue_description, urgency, preferred_date, preferred_time
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 function insertBooking(b) {
@@ -42,6 +43,7 @@ function insertBooking(b) {
     b.businessName || null,
     b.address,
     b.equipmentType,
+    b.equipmentDetail || null,
     b.issueDescription,
     b.urgency,
     b.preferredDate || null,

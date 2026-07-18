@@ -335,7 +335,7 @@
         <td>${b.name}<br><small>${b.business_name || ''}</small></td>
         <td><a href="tel:${b.phone}">${b.phone}</a>${b.email ? `<br><a href="mailto:${b.email}">${b.email}</a>` : ''}</td>
         <td>${b.address}</td>
-        <td>${b.equipment_type}</td>
+        <td>${b.equipment_type}${b.equipment_detail ? `<br><small>${b.equipment_detail}</small>` : ''}</td>
         <td>${urgencyBadge(b.urgency)}<br><small>${b.preferred_date || ''} ${b.preferred_time || ''}</small></td>
         <td style="max-width:200px;">${b.issue_description}</td>
         <td>
@@ -493,7 +493,7 @@
     document.getElementById('inv-tax').value = 0;
     document.getElementById('inv-notes').value = '';
     lineItemsWrap.innerHTML = '';
-    addLineItemRow(booking ? { description: `${booking.equipment_type} repair`, qty: 1, unitPrice: '' } : undefined);
+    addLineItemRow(booking ? { description: `${booking.equipment_detail || booking.equipment_type} repair`, qty: 1, unitPrice: '' } : undefined);
     backdrop.classList.remove('hidden');
   }
   function closeInvoiceModal() { backdrop.classList.add('hidden'); }

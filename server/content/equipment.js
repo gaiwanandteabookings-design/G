@@ -33,7 +33,7 @@ const equipmentCategories = [
     ],
   },
   {
-    slug: 'ice-machines',
+    slug: 'ice-machine',
     label: 'Ice Machines',
     items: ['Cube Ice Machines', 'Flake Ice Machines', 'Nugget Ice Machines', 'Undercounter Ice Makers', 'Ice Storage Bins', 'Water Filtration Systems'],
   },
@@ -62,12 +62,12 @@ const equipmentCategories = [
     ],
   },
   {
-    slug: 'mixers',
+    slug: 'mixer',
     label: 'Mixers',
     items: ['Stand Mixers', 'Spiral Mixers', 'Planetary Mixers', 'Bowl-Lift Mixers', 'Bench Mixers'],
   },
   {
-    slug: 'exhaust-hoods',
+    slug: 'exhaust-hood',
     label: 'Exhaust Hoods',
     items: ['Type I Grease Hoods', 'Type II Condensate Hoods', 'Exhaust Fans', 'Make-Up Air Fans', 'Ductwork & Airflow Systems', 'Control Switches & Wiring'],
   },

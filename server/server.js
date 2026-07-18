@@ -146,6 +146,7 @@ function validateBookingPayload(body) {
   const businessName = cleanString(body.businessName, 160);
   const address = cleanString(body.address, 240);
   const equipmentType = cleanString(body.equipmentType, 40);
+  const equipmentDetail = cleanString(body.equipmentDetail, 160);
   const issueDescription = cleanString(body.issueDescription, 2000);
   const urgency = cleanString(body.urgency, 40);
   const preferredDate = cleanString(body.preferredDate, 20);
@@ -170,6 +171,7 @@ function validateBookingPayload(body) {
       businessName,
       address,
       equipmentType,
+      equipmentDetail,
       issueDescription,
       urgency,
       preferredDate,

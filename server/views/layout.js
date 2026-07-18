@@ -6,6 +6,7 @@ const PHONE_DISPLAY = '(786) 919-7675';
 const PHONE_TEL = '+17869197675';
 const EMAIL = 'profix305@gmail.com';
 const GA_MEASUREMENT_ID = process.env.GA_MEASUREMENT_ID || '';
+const { equipmentCategories } = require('../content/equipment');
 
 function analytics() {
   if (!GA_MEASUREMENT_ID) return '';
@@ -174,6 +175,7 @@ ${bodyHtml}
 
 ${footer()}
 
+<script id="equipment-data" type="application/json">${JSON.stringify(equipmentCategories)}</script>
 <script src="/js/main.js"></script>
 <script src="/js/chat-widget.js" defer></script>
 </body>
