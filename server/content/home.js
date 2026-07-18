@@ -245,6 +245,54 @@ const bodyHtml = `
     </div>
   </section>
 
+  <!-- DISPATCH VAN -->
+  <section class="section van-section" id="dispatch-visual">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Dispatched &amp; Rolling</p>
+        <h2>Your Technician Is Already on the Way</h2>
+      </div>
+      <div class="van-scene" aria-hidden="true">
+        <div class="van-road"></div>
+        <svg class="van-illustration" viewBox="0 0 480 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g class="van-motion-lines" stroke="#c9d6e2" stroke-width="4" stroke-linecap="round">
+            <line x1="6" y1="90" x2="34" y2="90" />
+            <line x1="2" y1="110" x2="26" y2="110" />
+            <line x1="10" y1="130" x2="30" y2="130" />
+          </g>
+          <path d="M50 145 L400 145 L400 148 L50 148 Z" fill="#0c1b2e" opacity="0.08" />
+          <rect x="50" y="58" width="262" height="88" rx="12" fill="#0c1b2e" />
+          <path d="M312 146 L312 88 Q312 74 326 71 L364 64 Q384 62 398 77 L414 100 L414 146 Z" fill="#0c1b2e" />
+          <path d="M336 82 L363 76 Q377 74 386 85 L398 100 L336 100 Z" fill="#bfe9ee" />
+          <rect x="60" y="116" width="330" height="12" fill="#35d0e0" />
+          <line x1="182" y1="58" x2="182" y2="146" stroke="#13273f" stroke-width="2" />
+          <rect x="66" y="70" width="8" height="8" rx="2" fill="#35d0e0" />
+          <g class="van-wheel" style="transform-box: fill-box; transform-origin: 50% 50%;">
+            <circle cx="150" cy="152" r="30" fill="#13273f" />
+            <circle cx="150" cy="152" r="14" fill="#c9d6e2" />
+            <g stroke="#13273f" stroke-width="4" stroke-linecap="round">
+              <line x1="150" y1="140" x2="150" y2="164" />
+              <line x1="138" y1="152" x2="162" y2="152" />
+              <line x1="141" y1="143" x2="159" y2="161" />
+              <line x1="159" y1="143" x2="141" y2="161" />
+            </g>
+          </g>
+          <g class="van-wheel" style="transform-box: fill-box; transform-origin: 50% 50%;">
+            <circle cx="340" cy="152" r="30" fill="#13273f" />
+            <circle cx="340" cy="152" r="14" fill="#c9d6e2" />
+            <g stroke="#13273f" stroke-width="4" stroke-linecap="round">
+              <line x1="340" y1="140" x2="340" y2="164" />
+              <line x1="328" y1="152" x2="352" y2="152" />
+              <line x1="331" y1="143" x2="349" y2="161" />
+              <line x1="349" y1="143" x2="331" y2="161" />
+            </g>
+          </g>
+        </svg>
+      </div>
+      <p class="van-caption">Scroll — those wheels are turning with you, just like our dispatch across South Florida.</p>
+    </div>
+  </section>
+
   <!-- SERVICE AREA -->
   <section class="section section-alt" id="service-area">
     <div class="container service-area-inner">

@@ -158,6 +158,35 @@
     carousel.addEventListener('touchstart', stopAuto, { passive: true });
   }
 
+  // Dispatch van — wheels rotate as you scroll past it (a nod to the Amazon Flex
+  // page), driven by scroll delta rather than a fixed animation so it actually
+  // tracks how far you've scrolled.
+  const vanWheels = document.querySelectorAll('.van-wheel');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (vanWheels.length && !prefersReducedMotion) {
+    const vanScene = document.querySelector('.van-scene');
+    let vanVisible = false;
+    let wheelDeg = 0;
+    let lastScrollY = window.scrollY;
+
+    function updateWheels() {
+      const currentScrollY = window.scrollY;
+      if (vanVisible) {
+        wheelDeg += (currentScrollY - lastScrollY) * 1.2;
+        vanWheels.forEach((wheel) => { wheel.style.transform = `rotate(${wheelDeg}deg)`; });
+      }
+      lastScrollY = currentScrollY;
+    }
+
+    const vanObserver = new IntersectionObserver(
+      (entries) => { entries.forEach((entry) => { vanVisible = entry.isIntersecting; }); },
+      { threshold: 0 }
+    );
+    vanObserver.observe(vanScene);
+
+    window.addEventListener('scroll', updateWheels, { passive: true });
+  }
+
   // Cascading "specific equipment" picker — populates from the category chosen above,
   // with a trailing "Other — please specify" option that reveals a free-text field.
   const equipmentTypeSelect = document.getElementById('equipmentType');
