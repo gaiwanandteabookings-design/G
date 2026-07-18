@@ -689,14 +689,13 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 0.7rem;
 }
 
-.van-section { padding-top: 24px; padding-bottom: 24px; }
-.van-scene { position: relative; max-width: 560px; margin: 0 auto; }
-.van-road { position: absolute; left: 0; right: 0; bottom: 14px; height: 2px; background: repeating-linear-gradient(90deg, var(--color-ice-100) 0 18px, transparent 18px 32px); }
-.van-illustration { width: 100%; height: auto; display: block; position: relative; }
-.van-caption { text-align: center; color: var(--color-slate-500); font-size: 0.88rem; margin-top: 12px; }
+.fan-section { padding-top: 24px; padding-bottom: 24px; }
+.fan-scene { position: relative; max-width: 260px; margin: 0 auto; }
+.fan-illustration { width: 100%; height: auto; display: block; }
+.fan-caption { text-align: center; color: var(--color-slate-500); font-size: 0.88rem; margin-top: 16px; max-width: 480px; margin-left: auto; margin-right: auto; }
 
 @media (prefers-reduced-motion: reduce) {
-  .van-wheel { transition: none !important; }
+  .fan-blades { transition: none !important; }
 }
 
 .equipment-tabs {

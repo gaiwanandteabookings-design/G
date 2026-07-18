@@ -158,33 +158,32 @@
     carousel.addEventListener('touchstart', stopAuto, { passive: true });
   }
 
-  // Dispatch van — wheels rotate as you scroll past it (a nod to the Amazon Flex
-  // page), driven by scroll delta rather than a fixed animation so it actually
-  // tracks how far you've scrolled.
-  const vanWheels = document.querySelectorAll('.van-wheel');
+  // Exhaust fan — blades rotate as you scroll past it, driven by scroll delta
+  // rather than a fixed animation so it actually tracks how far you've scrolled.
+  const fanBlades = document.querySelector('.fan-blades');
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (vanWheels.length && !prefersReducedMotion) {
-    const vanScene = document.querySelector('.van-scene');
-    let vanVisible = false;
-    let wheelDeg = 0;
+  if (fanBlades && !prefersReducedMotion) {
+    const fanScene = document.querySelector('.fan-scene');
+    let fanVisible = false;
+    let bladeDeg = 0;
     let lastScrollY = window.scrollY;
 
-    function updateWheels() {
+    function updateFan() {
       const currentScrollY = window.scrollY;
-      if (vanVisible) {
-        wheelDeg += (currentScrollY - lastScrollY) * 1.2;
-        vanWheels.forEach((wheel) => { wheel.style.transform = `rotate(${wheelDeg}deg)`; });
+      if (fanVisible) {
+        bladeDeg += (currentScrollY - lastScrollY) * 1.8;
+        fanBlades.style.transform = `rotate(${bladeDeg}deg)`;
       }
       lastScrollY = currentScrollY;
     }
 
-    const vanObserver = new IntersectionObserver(
-      (entries) => { entries.forEach((entry) => { vanVisible = entry.isIntersecting; }); },
+    const fanObserver = new IntersectionObserver(
+      (entries) => { entries.forEach((entry) => { fanVisible = entry.isIntersecting; }); },
       { threshold: 0 }
     );
-    vanObserver.observe(vanScene);
+    fanObserver.observe(fanScene);
 
-    window.addEventListener('scroll', updateWheels, { passive: true });
+    window.addEventListener('scroll', updateFan, { passive: true });
   }
 
   // Cascading "specific equipment" picker — populates from the category chosen above,

@@ -245,51 +245,35 @@ const bodyHtml = `
     </div>
   </section>
 
-  <!-- DISPATCH VAN -->
-  <section class="section van-section" id="dispatch-visual">
+  <!-- AIRFLOW / EXHAUST FAN -->
+  <section class="section fan-section" id="airflow-visual">
     <div class="container">
       <div class="section-head">
-        <p class="eyebrow">Dispatched &amp; Rolling</p>
-        <h2>Your Technician Is Already on the Way</h2>
+        <p class="eyebrow">HVAC &amp; Exhaust</p>
+        <h2>Your Air, Always Moving</h2>
       </div>
-      <div class="van-scene" aria-hidden="true">
-        <div class="van-road"></div>
-        <svg class="van-illustration" viewBox="0 0 480 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g class="van-motion-lines" stroke="#c9d6e2" stroke-width="4" stroke-linecap="round">
-            <line x1="6" y1="90" x2="34" y2="90" />
-            <line x1="2" y1="110" x2="26" y2="110" />
-            <line x1="10" y1="130" x2="30" y2="130" />
+      <div class="fan-scene" aria-hidden="true">
+        <svg class="fan-illustration" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <rect x="16" y="16" width="208" height="208" rx="22" fill="#0c1b2e" />
+          <circle cx="120" cy="120" r="88" fill="none" stroke="#35d0e0" stroke-width="6" />
+          <g stroke="#35d0e0" stroke-width="3" stroke-linecap="round" opacity="0.55">
+            <line x1="120" y1="34" x2="120" y2="70" />
+            <line x1="120" y1="170" x2="120" y2="206" />
+            <line x1="34" y1="120" x2="70" y2="120" />
+            <line x1="170" y1="120" x2="206" y2="120" />
           </g>
-          <path d="M50 145 L400 145 L400 148 L50 148 Z" fill="#0c1b2e" opacity="0.08" />
-          <rect x="50" y="58" width="262" height="88" rx="12" fill="#0c1b2e" />
-          <path d="M312 146 L312 88 Q312 74 326 71 L364 64 Q384 62 398 77 L414 100 L414 146 Z" fill="#0c1b2e" />
-          <path d="M336 82 L363 76 Q377 74 386 85 L398 100 L336 100 Z" fill="#bfe9ee" />
-          <rect x="60" y="116" width="330" height="12" fill="#35d0e0" />
-          <line x1="182" y1="58" x2="182" y2="146" stroke="#13273f" stroke-width="2" />
-          <rect x="66" y="70" width="8" height="8" rx="2" fill="#35d0e0" />
-          <g class="van-wheel" style="transform-box: fill-box; transform-origin: 50% 50%;">
-            <circle cx="150" cy="152" r="30" fill="#13273f" />
-            <circle cx="150" cy="152" r="14" fill="#c9d6e2" />
-            <g stroke="#13273f" stroke-width="4" stroke-linecap="round">
-              <line x1="150" y1="140" x2="150" y2="164" />
-              <line x1="138" y1="152" x2="162" y2="152" />
-              <line x1="141" y1="143" x2="159" y2="161" />
-              <line x1="159" y1="143" x2="141" y2="161" />
-            </g>
-          </g>
-          <g class="van-wheel" style="transform-box: fill-box; transform-origin: 50% 50%;">
-            <circle cx="340" cy="152" r="30" fill="#13273f" />
-            <circle cx="340" cy="152" r="14" fill="#c9d6e2" />
-            <g stroke="#13273f" stroke-width="4" stroke-linecap="round">
-              <line x1="340" y1="140" x2="340" y2="164" />
-              <line x1="328" y1="152" x2="352" y2="152" />
-              <line x1="331" y1="143" x2="349" y2="161" />
-              <line x1="349" y1="143" x2="331" y2="161" />
-            </g>
+          <g class="fan-blades" style="transform-box: fill-box; transform-origin: 50% 50%;">
+            <defs>
+              <path id="fan-blade" d="M120 120 C 104 100 104 70 120 52 C 136 62 142 94 120 120 Z" fill="#c9d6e2" />
+            </defs>
+            <use href="#fan-blade" transform="rotate(0 120 120)" />
+            <use href="#fan-blade" transform="rotate(120 120 120)" />
+            <use href="#fan-blade" transform="rotate(240 120 120)" />
+            <circle cx="120" cy="120" r="15" fill="#35d0e0" />
           </g>
         </svg>
       </div>
-      <p class="van-caption">Scroll — those wheels are turning with you, just like our dispatch across South Florida.</p>
+      <p class="fan-caption">Scroll — that fan spins with you, just like the HVAC and exhaust systems we keep running across South Florida.</p>
     </div>
   </section>
 
