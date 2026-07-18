@@ -262,7 +262,7 @@ const bodyHtml = `
             <line x1="34" y1="120" x2="70" y2="120" />
             <line x1="170" y1="120" x2="206" y2="120" />
           </g>
-          <g class="fan-blades" style="transform-box: fill-box; transform-origin: 50% 50%;">
+          <g class="fan-blades">
             <defs>
               <path id="fan-blade" d="M120 120 C 104 100 104 70 120 52 C 136 62 142 94 120 120 Z" fill="#c9d6e2" />
             </defs>

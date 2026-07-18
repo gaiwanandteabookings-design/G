@@ -172,7 +172,10 @@
       const currentScrollY = window.scrollY;
       if (fanVisible) {
         bladeDeg += (currentScrollY - lastScrollY) * 1.8;
-        fanBlades.style.transform = `rotate(${bladeDeg}deg)`;
+        // Native SVG transform (not CSS) so it always rotates around the exact
+        // (120, 120) hub point — CSS transform-origin on an asymmetric group of
+        // shapes uses the bounding box center instead, which drifts sideways.
+        fanBlades.setAttribute('transform', `rotate(${bladeDeg} 120 120)`);
       }
       lastScrollY = currentScrollY;
     }
