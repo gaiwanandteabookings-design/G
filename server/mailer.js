@@ -28,9 +28,10 @@ async function send(msg) {
 
 async function notifyNewBooking(booking) {
   const to = process.env.NOTIFY_EMAIL;
-  if (!to) return;
+  if (!to) return { ok: false, error: 'NOTIFY_EMAIL is not set.' };
 
   const isEmergency = booking.urgency === 'emergency';
+  const equipmentLabel = booking.equipment_detail ? `${booking.equipment_type} — ${booking.equipment_detail}` : booking.equipment_type;
 
   const lines = [
     `Новая заявка на ремонт #${booking.id}`,
@@ -40,7 +41,7 @@ async function notifyNewBooking(booking) {
     `Email: ${booking.email || '-'}`,
     `Компания/объект: ${booking.business_name || '-'}`,
     `Адрес: ${booking.address}`,
-    `Оборудование: ${booking.equipment_type}`,
+    `Оборудование: ${equipmentLabel}`,
     `Срочность: ${booking.urgency}`,
     `Желаемая дата/время: ${booking.preferred_date || '-'} ${booking.preferred_time || ''}`,
     `Описание проблемы: ${booking.issue_description}`,
@@ -56,7 +57,7 @@ async function notifyNewBooking(booking) {
         detailRow('Email', booking.email),
         detailRow('Компания/объект', booking.business_name),
         detailRow('Адрес', booking.address),
-        detailRow('Оборудование', booking.equipment_type),
+        detailRow('Оборудование', equipmentLabel),
         detailRow('Срочность', booking.urgency),
         detailRow('Желаемая дата/время', [booking.preferred_date, booking.preferred_time].filter(Boolean).join(' ')),
       ]) +
@@ -66,10 +67,10 @@ async function notifyNewBooking(booking) {
     ctaUrl: `${SITE_URL}/admin.html`,
   });
 
-  await send({
+  return send({
     to,
     from: parseFrom(process.env.FROM_EMAIL),
-    subject: `Новая заявка на ремонт (#${booking.id}) — ${isEmergency ? 'СРОЧНО' : 'плановая'}`,
+    subject: `Новая заявка на ремонт (#${booking.id}) — ${isEmergency ? 'Срочная' : 'Плановая'}`,
     text: lines.join('\n'),
     html,
   });
@@ -78,13 +79,15 @@ async function notifyNewBooking(booking) {
 async function sendBookingConfirmation(booking) {
   if (!booking.email) return;
 
+  const equipmentLabel = booking.equipment_detail ? `${booking.equipment_type} — ${booking.equipment_detail}` : booking.equipment_type;
+
   const lines = [
     `Hi ${booking.name},`,
     ``,
     `Thanks for reaching out to ProFix305. We've received your repair request (#${booking.id}) and our dispatch team will call you shortly at ${booking.phone} to confirm the appointment.`,
     ``,
     `Request summary:`,
-    `Equipment: ${booking.equipment_type}`,
+    `Equipment: ${equipmentLabel}`,
     `Address: ${booking.address}`,
     `Urgency: ${booking.urgency}`,
     `Issue: ${booking.issue_description}`,
@@ -99,7 +102,7 @@ async function sendBookingConfirmation(booking) {
     heading: `Thanks, ${booking.name} — we've got your request`,
     intro: `We've received your repair request <strong>#${booking.id}</strong> and our dispatch team will call you shortly at ${escapeHtml(booking.phone)} to confirm the appointment.`,
     bodyHtml: detailTable([
-      detailRow('Equipment', booking.equipment_type),
+      detailRow('Equipment', equipmentLabel),
       detailRow('Address', booking.address),
       detailRow('Urgency', booking.urgency),
       detailRow('Issue', booking.issue_description),

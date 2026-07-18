@@ -51,6 +51,10 @@ router.post('/', async (req, res) => {
   const bookingId = body.bookingId ? Number(body.bookingId) : null;
 
   if (!customerName) return res.status(400).json({ ok: false, error: 'Customer name is required.' });
+  if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+    return res.status(400).json({ ok: false, error: 'A valid customer email is required.' });
+  }
+  if (!customerPhone) return res.status(400).json({ ok: false, error: 'Customer phone is required.' });
   if (!lineItems) return res.status(400).json({ ok: false, error: 'Add at least one valid line item (description, qty > 0, unit price >= 0).' });
   if (taxRate < 0 || taxRate > 100) return res.status(400).json({ ok: false, error: 'Tax rate must be between 0 and 100.' });
 

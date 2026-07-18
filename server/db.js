@@ -17,20 +17,22 @@ db.exec(`
     business_name TEXT,
     address TEXT NOT NULL,
     equipment_type TEXT NOT NULL,
+    equipment_detail TEXT,
     issue_description TEXT NOT NULL,
     urgency TEXT NOT NULL,
     preferred_date TEXT,
     preferred_time TEXT,
     status TEXT NOT NULL DEFAULT 'new',
+    notify_status TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )
 `);
 
 const insertBookingStmt = db.prepare(`
   INSERT INTO bookings (
-    name, phone, email, business_name, address, equipment_type,
+    name, phone, email, business_name, address, equipment_type, equipment_detail,
     issue_description, urgency, preferred_date, preferred_time
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 function insertBooking(b) {
@@ -41,6 +43,7 @@ function insertBooking(b) {
     b.businessName || null,
     b.address,
     b.equipmentType,
+    b.equipmentDetail || null,
     b.issueDescription,
     b.urgency,
     b.preferredDate || null,
@@ -62,6 +65,10 @@ function updateBookingStatus(id, status) {
   return result.changes > 0;
 }
 
+function updateNotifyStatus(id, notifyStatus) {
+  db.prepare('UPDATE bookings SET notify_status = ? WHERE id = ?').run(notifyStatus, id);
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS invoices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,6 +85,8 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     sent_at TEXT,
     paid_at TEXT,
+    signed_name TEXT,
+    signed_at TEXT,
     FOREIGN KEY (booking_id) REFERENCES bookings (id)
   )
 `);
@@ -131,14 +140,23 @@ function updateInvoiceStatus(id, status) {
   return result.changes > 0;
 }
 
+function signInvoice(id, signedName) {
+  const result = db
+    .prepare("UPDATE invoices SET signed_name = ?, signed_at = datetime('now') WHERE id = ? AND signed_name IS NULL")
+    .run(signedName, id);
+  return result.changes > 0;
+}
+
 module.exports = {
   insertBooking,
   listBookings,
   getBooking,
   updateBookingStatus,
+  updateNotifyStatus,
   insertInvoice,
   listInvoices,
   getInvoice,
   getInvoiceByPublicId,
   updateInvoiceStatus,
+  signInvoice,
 };

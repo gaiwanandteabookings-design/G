@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit');
 const { invoiceNumber, computeTotals, formatMoney } = require('./invoiceUtils');
 const { PHONE_DISPLAY, EMAIL } = require('./views/layout');
+const { INVOICE_TERMS } = require('./content/invoiceTerms');
 
 const NAVY = '#0c1b2e';
 const CYAN = '#0e9bab'; // darker cyan for print/paper contrast
@@ -20,6 +21,7 @@ function buildInvoicePdf(invoice) {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'America/New_York',
     });
 
     // Header
@@ -112,13 +114,45 @@ function buildInvoicePdf(invoice) {
       doc.font('Helvetica-Bold').fontSize(9).fillColor(SLATE).text('NOTES', 50, rowY);
       rowY += 14;
       doc.font('Helvetica').fontSize(10).fillColor(NAVY).text(invoice.notes, 50, rowY, { width: 495 });
+      rowY = doc.y + 20;
+    } else {
+      rowY += 10;
+    }
+
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(SLATE).text('TERMS & CONDITIONS', 50, rowY);
+    rowY = doc.y + 6;
+    doc.font('Helvetica').fontSize(9).fillColor(NAVY);
+    INVOICE_TERMS.forEach((term, i) => {
+      doc.text(`${i + 1}. ${term}`, 50, rowY, { width: 495 });
+      rowY = doc.y + 4;
+    });
+    rowY += 16;
+
+    if (invoice.signed_name) {
+      const signedDate = new Date(invoice.signed_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'America/New_York',
+      });
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(SLATE).text('CUSTOMER ACCEPTANCE', 50, rowY);
+      rowY = doc.y + 6;
+      doc.font('Helvetica').fontSize(10).fillColor(NAVY).text(`Signed by ${invoice.signed_name} on ${signedDate}`, 50, rowY);
+      rowY = doc.y + 20;
+    } else {
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(SLATE).text('CUSTOMER ACCEPTANCE (sign below)', 50, rowY);
+      rowY += 26;
+      doc.moveTo(50, rowY).lineTo(300, rowY).strokeColor(LINE).stroke();
+      rowY += 10;
+      doc.font('Helvetica').fontSize(8).fillColor(SLATE).text('Signature', 50, rowY);
+      rowY += 20;
     }
 
     doc
       .font('Helvetica')
       .fontSize(9)
       .fillColor(SLATE)
-      .text('Thank you for your business.', 50, 760, { width: 495, align: 'center' });
+      .text('Thank you for your business.', 50, rowY + 10, { width: 495, align: 'center' });
 
     doc.end();
   });

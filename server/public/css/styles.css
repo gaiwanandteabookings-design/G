@@ -689,6 +689,28 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 0.7rem;
 }
 
+.equipment-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid rgba(12,27,46,0.1);
+  margin-bottom: 28px;
+}
+.equipment-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 16px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-slate-500);
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.equipment-tab:hover { color: var(--color-navy-800); }
+.equipment-tab.is-active { color: var(--color-navy-900); border-bottom-color: var(--color-cyan-400); }
+.equipment-panel[hidden] { display: none; }
+
 .related-services { padding-top: 0; }
 .related-links {
   display: flex;
@@ -809,6 +831,33 @@ button { font-family: inherit; cursor: pointer; }
 .invoice-notes { background: var(--color-ice-50); border-radius: var(--radius-sm); padding: 16px 18px; margin-bottom: 28px; }
 .invoice-notes .label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; color: var(--color-slate-500); text-transform: uppercase; margin-bottom: 4px; }
 .invoice-notes p:last-child { margin: 0; font-size: 0.92rem; color: var(--color-navy-800); }
+
+.invoice-terms { background: var(--color-ice-50); border-radius: var(--radius-sm); padding: 16px 18px; margin-bottom: 20px; }
+.invoice-terms .label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; color: var(--color-slate-500); text-transform: uppercase; margin-bottom: 8px; }
+.invoice-terms ul { margin: 0; padding-left: 18px; }
+.invoice-terms li { font-size: 0.85rem; color: var(--color-navy-800); margin-bottom: 4px; line-height: 1.5; }
+
+.invoice-signed, .invoice-sign-form {
+  border: 1px solid rgba(12,27,46,0.1);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  margin-bottom: 24px;
+}
+.invoice-signed { background: rgba(14,155,171,0.08); }
+.invoice-signed .label, .invoice-sign-form .label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; color: var(--color-slate-500); text-transform: uppercase; margin-bottom: 6px; }
+.invoice-signed p:last-child { margin: 0; font-size: 0.95rem; color: var(--color-navy-800); }
+.invoice-sign-hint { font-size: 0.85rem; color: var(--color-slate-500); margin: 0 0 12px; }
+.invoice-sign-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.invoice-sign-row input {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid rgba(12,27,46,0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  font-family: inherit;
+}
+.invoice-sign-status { font-size: 0.85rem; color: var(--color-slate-500); margin: 8px 0 0; }
 
 .invoice-actions { display: flex; flex-wrap: wrap; gap: 14px; }
 
