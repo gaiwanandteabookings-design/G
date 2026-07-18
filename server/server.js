@@ -80,6 +80,18 @@ app.get('/invoice/:publicId', (req, res) => {
   res.type('html').send(renderLayout(buildInvoiceView(invoice)));
 });
 
+app.post('/invoice/:publicId/sign', (req, res) => {
+  const invoice = db.getInvoiceByPublicId(req.params.publicId);
+  if (!invoice) return res.status(404).json({ ok: false, error: 'Invoice not found' });
+  if (invoice.signed_name) return res.status(400).json({ ok: false, error: 'This invoice has already been signed.' });
+
+  const signedName = cleanString(req.body?.signedName, 160);
+  if (!signedName) return res.status(400).json({ ok: false, error: 'Please type your full name to sign.' });
+
+  db.signInvoice(invoice.id, signedName);
+  res.json({ ok: true });
+});
+
 app.get('/invoice/:publicId/pdf', async (req, res) => {
   const invoice = db.getInvoiceByPublicId(req.params.publicId);
   if (!invoice) return res.status(404).send('Invoice not found');
@@ -180,7 +192,13 @@ app.post('/api/bookings', async (req, res) => {
   try {
     const id = db.insertBooking(data);
     const booking = db.getBooking(id);
-    notifyNewBooking(booking).catch(() => {});
+    if (!mailConfigured || !process.env.NOTIFY_EMAIL) {
+      db.updateNotifyStatus(id, 'skipped');
+    } else {
+      notifyNewBooking(booking)
+        .then((result) => db.updateNotifyStatus(id, result?.ok ? 'sent' : 'failed'))
+        .catch(() => db.updateNotifyStatus(id, 'failed'));
+    }
     sendBookingConfirmation(booking).catch(() => {});
     return res.status(201).json({ ok: true, id });
   } catch (err) {

@@ -28,7 +28,7 @@ async function send(msg) {
 
 async function notifyNewBooking(booking) {
   const to = process.env.NOTIFY_EMAIL;
-  if (!to) return;
+  if (!to) return { ok: false, error: 'NOTIFY_EMAIL is not set.' };
 
   const isEmergency = booking.urgency === 'emergency';
 
@@ -66,10 +66,10 @@ async function notifyNewBooking(booking) {
     ctaUrl: `${SITE_URL}/admin.html`,
   });
 
-  await send({
+  return send({
     to,
     from: parseFrom(process.env.FROM_EMAIL),
-    subject: `Новая заявка на ремонт (#${booking.id}) — ${isEmergency ? 'СРОЧНО' : 'плановая'}`,
+    subject: `Новая заявка на ремонт (#${booking.id}) — ${isEmergency ? 'Срочная' : 'Плановая'}`,
     text: lines.join('\n'),
     html,
   });

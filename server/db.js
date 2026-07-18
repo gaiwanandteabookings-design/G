@@ -22,6 +22,7 @@ db.exec(`
     preferred_date TEXT,
     preferred_time TEXT,
     status TEXT NOT NULL DEFAULT 'new',
+    notify_status TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )
 `);
@@ -62,6 +63,10 @@ function updateBookingStatus(id, status) {
   return result.changes > 0;
 }
 
+function updateNotifyStatus(id, notifyStatus) {
+  db.prepare('UPDATE bookings SET notify_status = ? WHERE id = ?').run(notifyStatus, id);
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS invoices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,6 +83,8 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     sent_at TEXT,
     paid_at TEXT,
+    signed_name TEXT,
+    signed_at TEXT,
     FOREIGN KEY (booking_id) REFERENCES bookings (id)
   )
 `);
@@ -131,14 +138,23 @@ function updateInvoiceStatus(id, status) {
   return result.changes > 0;
 }
 
+function signInvoice(id, signedName) {
+  const result = db
+    .prepare("UPDATE invoices SET signed_name = ?, signed_at = datetime('now') WHERE id = ? AND signed_name IS NULL")
+    .run(signedName, id);
+  return result.changes > 0;
+}
+
 module.exports = {
   insertBooking,
   listBookings,
   getBooking,
   updateBookingStatus,
+  updateNotifyStatus,
   insertInvoice,
   listInvoices,
   getInvoice,
   getInvoiceByPublicId,
   updateInvoiceStatus,
+  signInvoice,
 };

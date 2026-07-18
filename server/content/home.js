@@ -2,6 +2,7 @@ const { PHONE_TEL, PHONE_DISPLAY, EMAIL, SITE_URL } = require('../views/layout')
 const { renderServiceIcon } = require('../views/icons');
 const { services } = require('./services');
 const { areas } = require('./areas');
+const { equipmentCategories } = require('./equipment');
 const { faqPageSchema } = require('../views/schema');
 
 const countyGroups = [
@@ -100,6 +101,20 @@ const serviceCards = services
   )
   .join('');
 
+const equipmentTabsHtml = equipmentCategories
+  .map(
+    (cat, i) => `<button class="equipment-tab${i === 0 ? ' is-active' : ''}" data-target="${cat.slug}" role="tab" aria-selected="${i === 0}">${cat.label}</button>`
+  )
+  .join('');
+
+const equipmentPanelsHtml = equipmentCategories
+  .map(
+    (cat, i) => `<ul class="bullet-grid equipment-panel${i === 0 ? ' is-active' : ''}" data-panel="${cat.slug}"${i === 0 ? '' : ' hidden'}>${cat.items
+      .map((item) => `<li>${item}</li>`)
+      .join('')}</ul>`
+  )
+  .join('');
+
 const bodyHtml = `
   <!-- HERO -->
   <section class="hero">
@@ -147,6 +162,20 @@ const bodyHtml = `
       <div class="grid services-grid">${serviceCards}
       </div>
       <p class="services-note">Also servicing: compressor &amp; refrigerant systems, digital controls &amp; calibration, preventive maintenance plans, and new equipment installation — ask when you book.</p>
+    </div>
+  </section>
+
+  <!-- EQUIPMENT WE SERVICE -->
+  <section class="section section-alt" id="equipment">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Equipment We Service</p>
+        <h2>Every Make and Model, By Category</h2>
+        <p class="section-sub">Tap a category to see the specific equipment types our technicians repair — all major commercial brands.</p>
+      </div>
+
+      <div class="equipment-tabs" role="tablist" aria-label="Equipment categories">${equipmentTabsHtml}</div>
+      <div class="equipment-panels">${equipmentPanelsHtml}</div>
     </div>
   </section>
 

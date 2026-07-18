@@ -54,6 +54,24 @@
     });
   });
 
+  // Equipment category tabs
+  const equipmentTabs = document.querySelectorAll('.equipment-tab');
+  if (equipmentTabs.length) {
+    const panels = document.querySelectorAll('.equipment-panel');
+    equipmentTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-target');
+        equipmentTabs.forEach((t) => {
+          t.classList.toggle('is-active', t === tab);
+          t.setAttribute('aria-selected', String(t === tab));
+        });
+        panels.forEach((p) => {
+          p.hidden = p.getAttribute('data-panel') !== target;
+        });
+      });
+    });
+  }
+
   // Reveal-on-scroll
   const revealTargets = document.querySelectorAll('.card, .why-item, .process-list li, .area-card, .review-card');
   revealTargets.forEach((el) => el.setAttribute('data-reveal', ''));

@@ -58,6 +58,9 @@
   .badge.scheduled, .badge.draft { background:#e7ecf2; color: var(--slate); }
   .badge.paid { background:#dff5e6; color:#1a8f5e; }
   .badge.void, .badge.cancelled { background:#fbe2e2; color:#b3261e; }
+  .notify-badge { display:inline-block; font-size:.72rem; font-weight:600; white-space:nowrap; }
+  .notify-badge.notify-sent { color:#1a8f5e; }
+  .notify-badge.notify-failed { color:#b3261e; }
   select.status { padding:5px 8px; border-radius:6px; border:1px solid var(--line); font-size:.8rem; }
   .empty { text-align:center; padding: 60px 20px; color: var(--slate); }
   .row-actions { display:flex; gap:6px; flex-wrap: wrap; }
@@ -165,14 +168,14 @@
         <input type="text" id="inv-name" />
       </div>
       <div class="field">
-        <label for="inv-email">Email</label>
-        <input type="email" id="inv-email" />
+        <label for="inv-email">Email*</label>
+        <input type="email" id="inv-email" required />
       </div>
     </div>
     <div class="field-row">
       <div class="field">
-        <label for="inv-phone">Phone</label>
-        <input type="tel" id="inv-phone" />
+        <label for="inv-phone">Phone*</label>
+        <input type="tel" id="inv-phone" required />
       </div>
       <div class="field">
         <label for="inv-tax">Tax Rate (%)</label>
@@ -211,6 +214,14 @@
   const usernameInput = document.getElementById('username-input');
   const passwordInput = document.getElementById('password-input');
   const gateError = document.getElementById('gate-error');
+
+  function fmtDate(dateStr) {
+    return new Date(dateStr).toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  }
 
   function getToken() { return sessionStorage.getItem('pf305_admin_token') || ''; }
   function setToken(t) { sessionStorage.setItem('pf305_admin_token', t); }
@@ -305,6 +316,12 @@
     return `<span class="badge ${u}">${label}</span>`;
   }
 
+  function notifyBadge(status) {
+    if (status === 'sent') return '<span class="notify-badge notify-sent" title="Email notification sent">✓ Emailed</span>';
+    if (status === 'failed') return '<span class="notify-badge notify-failed" title="Email notification failed to send — check SendGrid setup">⚠ Email failed</span>';
+    return '';
+  }
+
   function renderBookings(bookings) {
     document.getElementById('bookings-count').textContent = `${bookings.length} lead${bookings.length === 1 ? '' : 's'}`;
     const wrap = document.getElementById('bookings-table-wrap');
@@ -314,7 +331,7 @@
     }
     const rows = bookings.map((b) => `
       <tr>
-        <td>#${b.id}<br><small>${new Date(b.created_at).toLocaleString()}</small></td>
+        <td>#${b.id}<br><small>${fmtDate(b.created_at)}</small>${notifyBadge(b.notify_status) ? `<br>${notifyBadge(b.notify_status)}` : ''}</td>
         <td>${b.name}<br><small>${b.business_name || ''}</small></td>
         <td><a href="tel:${b.phone}">${b.phone}</a>${b.email ? `<br><a href="mailto:${b.email}">${b.email}</a>` : ''}</td>
         <td>${b.address}</td>
@@ -378,10 +395,10 @@
     }
     const rows = invoices.map((inv) => `
       <tr>
-        <td>${inv.invoice_number}<br><small>${new Date(inv.created_at).toLocaleDateString()}</small></td>
+        <td>${inv.invoice_number}<br><small>${fmtDate(inv.created_at)}</small></td>
         <td>${inv.customer_name}<br><small>${inv.customer_email || ''}</small></td>
         <td>${money(inv.totals.total)}</td>
-        <td><span class="badge ${inv.status}">${inv.status}</span></td>
+        <td><span class="badge ${inv.status}">${inv.status}</span>${inv.signed_name ? `<br><small>Signed by ${inv.signed_name}</small>` : ''}</td>
         <td>
           <div class="row-actions">
             <a class="link-btn" href="/api/invoices/${inv.id}/pdf?token=${encodeURIComponent(getToken())}" target="_blank" rel="noopener">PDF</a>
@@ -505,11 +522,10 @@
   async function submitInvoice(sendNow) {
     const payload = collectInvoicePayload();
     if (!payload.customerName) return showBanner('Customer name is required.', true);
+    if (!payload.customerEmail) return showBanner('Customer email is required.', true);
+    if (!payload.customerPhone) return showBanner('Customer phone is required.', true);
     if (!payload.lineItems.length || payload.lineItems.some((i) => !i.description || !(i.qty > 0))) {
       return showBanner('Add at least one line item with a description and quantity.', true);
-    }
-    if (sendNow && !payload.customerEmail) {
-      return showBanner('Add a customer email to send the invoice.', true);
     }
 
     const btn = sendNow ? document.getElementById('save-send-btn') : document.getElementById('save-draft-btn');
