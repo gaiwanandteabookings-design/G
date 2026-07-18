@@ -30,6 +30,12 @@
 html { scroll-behavior: smooth; }
 [id] { scroll-margin-top: 96px; }
 
+/* Shows in the margins during iOS Safari's rubber-band overscroll bounce past
+   the page's top/bottom edge — matches the footer/header so the bounce blends
+   in instead of flashing white. Plain sections still render on body's own
+   white background below, so this doesn't affect any actual page content. */
+html { background: var(--color-ink); }
+
 body {
   margin: 0;
   font-family: var(--font-body);
