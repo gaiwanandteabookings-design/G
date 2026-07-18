@@ -158,6 +158,34 @@
     carousel.addEventListener('touchstart', stopAuto, { passive: true });
   }
 
+  // Exhaust fan — blades rotate as you scroll past it, driven by scroll delta
+  // rather than a fixed animation so it actually tracks how far you've scrolled.
+  const fanBlades = document.querySelector('.fan-blades');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (fanBlades && !prefersReducedMotion) {
+    const fanScene = document.querySelector('.fan-scene');
+    let fanVisible = false;
+    let bladeDeg = 0;
+    let lastScrollY = window.scrollY;
+
+    function updateFan() {
+      const currentScrollY = window.scrollY;
+      if (fanVisible) {
+        bladeDeg += (currentScrollY - lastScrollY) * 1.8;
+        fanBlades.style.transform = `rotate(${bladeDeg}deg)`;
+      }
+      lastScrollY = currentScrollY;
+    }
+
+    const fanObserver = new IntersectionObserver(
+      (entries) => { entries.forEach((entry) => { fanVisible = entry.isIntersecting; }); },
+      { threshold: 0 }
+    );
+    fanObserver.observe(fanScene);
+
+    window.addEventListener('scroll', updateFan, { passive: true });
+  }
+
   // Cascading "specific equipment" picker — populates from the category chosen above,
   // with a trailing "Other — please specify" option that reveals a free-text field.
   const equipmentTypeSelect = document.getElementById('equipmentType');

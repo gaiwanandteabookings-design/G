@@ -245,6 +245,38 @@ const bodyHtml = `
     </div>
   </section>
 
+  <!-- AIRFLOW / EXHAUST FAN -->
+  <section class="section fan-section" id="airflow-visual">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">HVAC &amp; Exhaust</p>
+        <h2>Your Air, Always Moving</h2>
+      </div>
+      <div class="fan-scene" aria-hidden="true">
+        <svg class="fan-illustration" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <rect x="16" y="16" width="208" height="208" rx="22" fill="#0c1b2e" />
+          <circle cx="120" cy="120" r="88" fill="none" stroke="#35d0e0" stroke-width="6" />
+          <g stroke="#35d0e0" stroke-width="3" stroke-linecap="round" opacity="0.55">
+            <line x1="120" y1="34" x2="120" y2="70" />
+            <line x1="120" y1="170" x2="120" y2="206" />
+            <line x1="34" y1="120" x2="70" y2="120" />
+            <line x1="170" y1="120" x2="206" y2="120" />
+          </g>
+          <g class="fan-blades" style="transform-box: fill-box; transform-origin: 50% 50%;">
+            <defs>
+              <path id="fan-blade" d="M120 120 C 104 100 104 70 120 52 C 136 62 142 94 120 120 Z" fill="#c9d6e2" />
+            </defs>
+            <use href="#fan-blade" transform="rotate(0 120 120)" />
+            <use href="#fan-blade" transform="rotate(120 120 120)" />
+            <use href="#fan-blade" transform="rotate(240 120 120)" />
+            <circle cx="120" cy="120" r="15" fill="#35d0e0" />
+          </g>
+        </svg>
+      </div>
+      <p class="fan-caption">Scroll — that fan spins with you, just like the HVAC and exhaust systems we keep running across South Florida.</p>
+    </div>
+  </section>
+
   <!-- SERVICE AREA -->
   <section class="section section-alt" id="service-area">
     <div class="container service-area-inner">

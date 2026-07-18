@@ -689,6 +689,15 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 0.7rem;
 }
 
+.fan-section { padding-top: 24px; padding-bottom: 24px; }
+.fan-scene { position: relative; max-width: 260px; margin: 0 auto; }
+.fan-illustration { width: 100%; height: auto; display: block; }
+.fan-caption { text-align: center; color: var(--color-slate-500); font-size: 0.88rem; margin-top: 16px; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fan-blades { transition: none !important; }
+}
+
 .equipment-tabs {
   display: flex;
   flex-wrap: wrap;
