@@ -100,6 +100,7 @@ function footer() {
     <p>&copy; <span id="year"></span> ProFix305. All rights reserved. &middot;
     <a href="/privacy-policy/">Privacy Policy</a> &middot;
     <a href="/terms-of-service/">Terms of Service</a> &middot;
+    <a href="/accessibility/">Accessibility</a> &middot;
     <a href="/admin.html">Staff Login</a></p>
   </div>
 </footer>

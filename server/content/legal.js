@@ -141,4 +141,41 @@ const termsOfService = {
   `,
 };
 
-module.exports = { privacyPolicy, termsOfService };
+const accessibilityStatement = {
+  slug: 'accessibility',
+  navLabel: 'Accessibility',
+  pageTitle: `Accessibility Statement | ${SITE_NAME}`,
+  metaDescription: `${SITE_NAME}'s commitment to a website that's usable by everyone, including people who use assistive technology.`,
+  heading: 'Accessibility Statement',
+  updated: 'This statement was last updated July 2026.',
+  bodyHtml: `
+    <p>${SITE_NAME} is committed to making this website usable by everyone, including
+    people who use assistive technology such as screen readers, screen magnifiers, or
+    keyboard-only navigation.</p>
+
+    <h3>What We've Done</h3>
+    <p>This site is built with accessibility in mind: descriptive alt text on images,
+    labeled form fields, visible keyboard focus indicators, a "skip to content" link,
+    sufficient color contrast on text, and support for browser zoom and text resizing.
+    We generally aim to conform to the <strong>Web Content Accessibility Guidelines
+    (WCAG) 2.1, Level AA</strong>.</p>
+
+    <h3>Ongoing Effort</h3>
+    <p>Accessibility is an ongoing effort, not a one-time fix. If you encounter any part
+    of this site that's difficult to use with assistive technology, we want to know so
+    we can fix it.</p>
+
+    <h3>Alternative Ways to Reach Us</h3>
+    <p>If any part of this website is not accessible to you, you can always reach us
+    directly by phone at <a href="tel:${PHONE_TEL}">${PHONE_DISPLAY}</a> to book a repair
+    or ask a question — you don't need to use the website at all.</p>
+
+    <h3>Contact Us</h3>
+    <p>Found an accessibility issue, or need this information in another format? Contact
+    us at <a href="mailto:${EMAIL}">${EMAIL}</a> or
+    <a href="tel:${PHONE_TEL}">${PHONE_DISPLAY}</a> and we'll do our best to help
+    promptly.</p>
+  `,
+};
+
+module.exports = { privacyPolicy, termsOfService, accessibilityStatement };

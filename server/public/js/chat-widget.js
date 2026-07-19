@@ -80,13 +80,14 @@
     body.scrollTop = body.scrollHeight;
   }
 
-  function renderTextInput({ placeholder, multiline, type }, onSubmit) {
+  function renderTextInput({ placeholder, multiline, type, label }, onSubmit) {
     const row = document.createElement('div');
     row.className = 'chat-input-row';
     const input = document.createElement(multiline ? 'textarea' : 'input');
     if (multiline) input.rows = 2;
     else input.type = type || 'text';
     input.placeholder = placeholder || '';
+    if (label) input.setAttribute('aria-label', label);
     if (input.type === 'tel') {
       if (typeof window.attachPhoneFormatting === 'function') {
         window.attachPhoneFormatting(input);
@@ -131,7 +132,7 @@
     if (!category) {
       // Top-level "Other" has no item list — go straight to free text.
       addMsg('What equipment is it?', 'bot');
-      renderTextInput({ placeholder: 'e.g. Bar Cooler' }, (value) => {
+      renderTextInput({ placeholder: 'e.g. Bar Cooler', label: 'What equipment is it?' }, (value) => {
         answers.equipmentDetail = value;
         addMsg(value, 'user');
         stepIndex += 1;
@@ -147,7 +148,7 @@
         if (opt.value === OTHER_VALUE) {
           addMsg(opt.label, 'user');
           addMsg('No problem — what is it?', 'bot');
-          renderTextInput({ placeholder: 'e.g. Bar Cooler' }, (value) => {
+          renderTextInput({ placeholder: 'e.g. Bar Cooler', label: 'What is it?' }, (value) => {
             answers.equipmentDetail = value;
             addMsg(value, 'user');
             stepIndex += 1;
@@ -182,7 +183,7 @@
         }
       });
     } else {
-      renderTextInput({ placeholder: step.placeholder, multiline: step.key === 'issueDescription', type: step.type }, (value) => {
+      renderTextInput({ placeholder: step.placeholder, multiline: step.key === 'issueDescription', type: step.type, label: step.bot }, (value) => {
         answers[step.key] = value;
         addMsg(value, 'user');
         stepIndex += 1;
