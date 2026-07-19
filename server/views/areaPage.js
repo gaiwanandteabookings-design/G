@@ -109,6 +109,7 @@ function buildAreaPage(area) {
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
         name: 'ProFix305',
+        logo: `${SITE_URL}/images/logo.png`,
         telephone: PHONE_TEL,
         areaServed: { '@type': 'City', name: area.name },
         url: `${SITE_URL}/areas/${area.slug}/`,

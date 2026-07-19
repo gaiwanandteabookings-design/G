@@ -61,6 +61,7 @@ const meta = {
       '@type': 'LocalBusiness',
       name: 'ProFix305',
       image: `${SITE_URL}/images/og-cover.jpg`,
+      logo: `${SITE_URL}/images/logo.png`,
       telephone: PHONE_TEL,
       email: EMAIL,
       priceRange: '$$',

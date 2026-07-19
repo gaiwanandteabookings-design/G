@@ -104,6 +104,7 @@ function buildServicePage(service) {
         provider: {
           '@type': 'LocalBusiness',
           name: 'ProFix305',
+          logo: `${SITE_URL}/images/logo.png`,
           telephone: PHONE_TEL,
           url: `${SITE_URL}/`,
         },
