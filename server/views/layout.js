@@ -123,6 +123,7 @@ function footer() {
       <button class="chat-close" id="chat-close" aria-label="Close chat">&times;</button>
     </div>
     <div class="chat-panel-body" id="chat-body"></div>
+    <p class="chat-consent-note">By chatting, you agree to our <a href="/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> and consent to be contacted about your request.</p>
   </div>
 </div>`;
 }

@@ -437,6 +437,13 @@ const bodyHtml = `
           <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
         </div>
 
+        <label class="consent-field">
+          <input type="checkbox" id="consent" required />
+          <span>I agree to the <a href="/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> and
+          <a href="/terms-of-service" target="_blank" rel="noopener">Terms of Service</a>, and consent to
+          receive calls/texts about my request (msg &amp; data rates may apply).*</span>
+        </label>
+
         <button type="submit" class="btn btn-primary btn-lg" id="booking-submit">Request Repair</button>
         <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
       </form>
