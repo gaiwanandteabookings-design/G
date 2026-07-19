@@ -18,7 +18,7 @@ const home = require('./content/home');
 const { services } = require('./content/services');
 const { pricing } = require('./content/pricing');
 const { areas } = require('./content/areas');
-const { privacyPolicy, termsOfService } = require('./content/legal');
+const { privacyPolicy, termsOfService, accessibilityStatement } = require('./content/legal');
 const auth = require('./auth');
 const invoiceRoutes = require('./routes/invoices');
 
@@ -104,6 +104,10 @@ app.get(`/${termsOfService.slug}`, (req, res) => {
   res.type('html').send(renderLayout(buildLegalPage(termsOfService)));
 });
 
+app.get(`/${accessibilityStatement.slug}`, (req, res) => {
+  res.type('html').send(renderLayout(buildLegalPage(accessibilityStatement)));
+});
+
 app.get('/invoice/:publicId', async (req, res) => {
   const invoice = await db.getInvoiceByPublicId(req.params.publicId);
   if (!invoice) return res.status(404).send('Invoice not found');
@@ -142,6 +146,9 @@ app.get('/sitemap.xml', (req, res) => {
     ...services.map((s) => ({ loc: `${SITE_URL}/miami/${s.slug}/`, priority: '0.8' })),
     ...services.filter((s) => pricing[s.slug]).map((s) => ({ loc: `${SITE_URL}/pricing/${s.slug}/`, priority: '0.6' })),
     ...areas.map((a) => ({ loc: `${SITE_URL}/areas/${a.slug}/`, priority: '0.6' })),
+    { loc: `${SITE_URL}/${privacyPolicy.slug}/`, priority: '0.3' },
+    { loc: `${SITE_URL}/${termsOfService.slug}/`, priority: '0.3' },
+    { loc: `${SITE_URL}/${accessibilityStatement.slug}/`, priority: '0.3' },
   ];
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
