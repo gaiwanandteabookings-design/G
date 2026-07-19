@@ -62,7 +62,13 @@ if (IS_PRODUCTION) {
   });
 }
 
-app.use(express.json({ limit: '20kb' }));
+// /api/bookings gets its own, much larger body parser below (it optionally carries a
+// base64 photo) — skip the small default parser for that one route so it doesn't 413
+// before the route-specific parser gets a chance to run.
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.path === '/api/bookings') return next();
+  express.json({ limit: '20kb' })(req, res, next);
+});
 // Short cache window rather than a long/immutable one — there's no cache-busting
 // filename hash on these assets, so a long cache would mean visitors keep seeing
 // stale CSS/JS for a while after every deploy.
@@ -98,31 +104,31 @@ app.get(`/${termsOfService.slug}`, (req, res) => {
   res.type('html').send(renderLayout(buildLegalPage(termsOfService)));
 });
 
-app.get('/invoice/:publicId', (req, res) => {
-  const invoice = db.getInvoiceByPublicId(req.params.publicId);
+app.get('/invoice/:publicId', async (req, res) => {
+  const invoice = await db.getInvoiceByPublicId(req.params.publicId);
   if (!invoice) return res.status(404).send('Invoice not found');
   res.type('html').send(renderLayout(buildInvoiceView(invoice)));
 });
 
-app.post('/invoice/:publicId/sign', (req, res) => {
+app.post('/invoice/:publicId/sign', async (req, res) => {
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
   if (isSignRateLimited(ip)) {
     return res.status(429).json({ ok: false, error: 'Too many attempts. Please try again later.' });
   }
 
-  const invoice = db.getInvoiceByPublicId(req.params.publicId);
+  const invoice = await db.getInvoiceByPublicId(req.params.publicId);
   if (!invoice) return res.status(404).json({ ok: false, error: 'Invoice not found' });
   if (invoice.signed_name) return res.status(400).json({ ok: false, error: 'This invoice has already been signed.' });
 
   const signedName = cleanString(req.body?.signedName, 160);
   if (!signedName) return res.status(400).json({ ok: false, error: 'Please type your full name to sign.' });
 
-  db.signInvoice(invoice.id, signedName);
+  await db.signInvoice(invoice.id, signedName);
   res.json({ ok: true });
 });
 
 app.get('/invoice/:publicId/pdf', async (req, res) => {
-  const invoice = db.getInvoiceByPublicId(req.params.publicId);
+  const invoice = await db.getInvoiceByPublicId(req.params.publicId);
   if (!invoice) return res.status(404).send('Invoice not found');
   const pdfBuffer = await buildInvoicePdf(invoice);
   res.set('Content-Type', 'application/pdf');
@@ -180,6 +186,34 @@ function cleanString(value, maxLen) {
   return value.trim().slice(0, maxLen);
 }
 
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB decoded
+
+// Accepts a "data:image/jpeg;base64,...." string from the client. Never trusts the
+// declared mime type alone — the first bytes of the decoded buffer have to actually
+// match that type's file signature, so a renamed/relabeled file can't sneak through.
+function parsePhotoDataUrl(dataUrl) {
+  if (typeof dataUrl !== 'string' || !dataUrl) return null;
+  const match = /^data:(image\/(?:jpeg|png|webp));base64,([a-zA-Z0-9+/=]+)$/.exec(dataUrl);
+  if (!match) return null;
+  const mime = match[1];
+  let buffer;
+  try {
+    buffer = Buffer.from(match[2], 'base64');
+  } catch {
+    return null;
+  }
+  if (!buffer.length || buffer.length > MAX_PHOTO_BYTES) return null;
+
+  const isJpeg = buffer.length > 2 && buffer[0] === 0xff && buffer[1] === 0xd8;
+  const isPng = buffer.length > 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  const isWebp = buffer.length > 12 && buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP';
+  const signatureMatches =
+    (mime === 'image/jpeg' && isJpeg) || (mime === 'image/png' && isPng) || (mime === 'image/webp' && isWebp);
+  if (!signatureMatches) return null;
+
+  return { mime, base64: match[2] };
+}
+
 function validateBookingPayload(body) {
   const errors = [];
 
@@ -223,26 +257,32 @@ function validateBookingPayload(body) {
   };
 }
 
-app.post('/api/bookings', async (req, res) => {
+app.post('/api/bookings', express.json({ limit: '8mb' }), async (req, res) => {
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
   if (isRateLimited(ip)) {
     return res.status(429).json({ ok: false, error: 'Слишком много заявок. Попробуйте позже или позвоните нам напрямую.' });
   }
 
   const { errors, data } = validateBookingPayload(req.body || {});
+
+  let photo = null;
+  if (req.body && req.body.photo) {
+    photo = parsePhotoDataUrl(req.body.photo);
+    if (!photo) errors.push('Фото повреждено или имеет неподдерживаемый формат (нужны JPEG, PNG или WebP до 5 МБ)');
+  }
   if (errors.length) {
     return res.status(400).json({ ok: false, error: errors.join('; ') });
   }
 
   try {
-    const id = db.insertBooking(data);
-    const booking = db.getBooking(id);
+    const id = await db.insertBooking({ ...data, photoData: photo?.base64, photoMime: photo?.mime });
+    const booking = await db.getBooking(id);
     if (!mailConfigured || !process.env.NOTIFY_EMAIL) {
-      db.updateNotifyStatus(id, 'skipped');
+      db.updateNotifyStatus(id, 'skipped').catch(() => {});
     } else {
       notifyNewBooking(booking)
         .then((result) => db.updateNotifyStatus(id, result?.ok ? 'sent' : 'failed'))
-        .catch(() => db.updateNotifyStatus(id, 'failed'));
+        .catch(() => db.updateNotifyStatus(id, 'failed').catch(() => {}));
     }
     sendBookingConfirmation(booking).catch(() => {});
     return res.status(201).json({ ok: true, id });
@@ -271,20 +311,35 @@ app.post('/api/admin/logout', auth.requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/bookings', auth.requireAdmin, (req, res) => {
-  res.json({ ok: true, bookings: db.listBookings() });
+app.get('/api/bookings', auth.requireAdmin, async (req, res) => {
+  res.json({ ok: true, bookings: await db.listBookings() });
 });
 
-app.patch('/api/bookings/:id/status', auth.requireAdmin, (req, res) => {
+app.get('/api/bookings/:id/photo', auth.requireAdmin, async (req, res) => {
+  const row = await db.getBookingPhoto(Number(req.params.id));
+  if (!row || !row.photo_data) return res.status(404).send('No photo');
+  res.set('Content-Type', row.photo_mime || 'application/octet-stream');
+  res.set('Cache-Control', 'private, max-age=3600');
+  res.send(Buffer.from(row.photo_data, 'base64'));
+});
+
+app.patch('/api/bookings/:id/status', auth.requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   const status = cleanString(req.body?.status, 30);
   const allowed = new Set(['new', 'contacted', 'scheduled', 'completed', 'cancelled']);
   if (!id || !allowed.has(status)) {
     return res.status(400).json({ ok: false, error: 'Некорректные данные' });
   }
-  const updated = db.updateBookingStatus(id, status);
+  const updated = await db.updateBookingStatus(id, status);
   if (!updated) return res.status(404).json({ ok: false, error: 'Заявка не найдена' });
   res.json({ ok: true });
+});
+
+app.get('/api/admin/export', auth.requireAdmin, async (req, res) => {
+  const data = await db.exportAllData();
+  const date = new Date().toISOString().slice(0, 10);
+  res.set('Content-Disposition', `attachment; filename="profix305-export-${date}.json"`);
+  res.json(data);
 });
 
 app.use('/api/invoices', invoiceRoutes);
@@ -317,12 +372,22 @@ app.use((req, res) => {
   );
 });
 
-app.listen(PORT, () => {
-  console.log(`ProFix305 server running on http://localhost:${PORT}`);
-  if (!auth.ADMIN_USERNAME || !auth.ADMIN_PASSWORD) {
-    console.warn('[warn] ADMIN_USERNAME/ADMIN_PASSWORD не заданы в .env — вход в /admin.html не будет работать.');
-  }
-  if (!mailConfigured) {
-    console.warn('[warn] SENDGRID_API_KEY не задан — email-уведомления о заявках отключены (заявки всё равно сохраняются в БД).');
-  }
-});
+db.ready
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`ProFix305 server running on http://localhost:${PORT}`);
+      if (!auth.ADMIN_USERNAME || !auth.ADMIN_PASSWORD) {
+        console.warn('[warn] ADMIN_USERNAME/ADMIN_PASSWORD не заданы в .env — вход в /admin.html не будет работать.');
+      }
+      if (!mailConfigured) {
+        console.warn('[warn] SENDGRID_API_KEY не задан — email-уведомления о заявках отключены (заявки всё равно сохраняются в БД).');
+      }
+      if (!process.env.TURSO_DATABASE_URL) {
+        console.warn('[warn] TURSO_DATABASE_URL не задан — используется локальный файл БД, который НЕ переживёт передеплой на Render.');
+      }
+    });
+  })
+  .catch((err) => {
+    console.error('[fatal] Не удалось инициализировать базу данных:', err);
+    process.exit(1);
+  });

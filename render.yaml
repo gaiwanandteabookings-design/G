@@ -17,3 +17,12 @@ services:
         value: profix305
       - key: ADMIN_PASSWORD
         generateValue: true
+      # Without these two, bookings/invoices live in a local file that Render wipes on
+      # every redeploy (its free-tier disk isn't persistent). Set the real values in the
+      # Render dashboard (Environment tab) after creating a free database at turso.tech —
+      # see README for the exact steps. sync: false means "don't overwrite what's set in
+      # the dashboard" so this file never needs to hold the real values.
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false

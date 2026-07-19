@@ -420,6 +420,17 @@ const bodyHtml = `
           <textarea id="issueDescription" name="issueDescription" rows="4" maxlength="2000" required></textarea>
         </div>
 
+        <div class="form-field">
+          <label for="photo">Photo of the Issue (optional)</label>
+          <input type="file" id="photo" accept="image/jpeg,image/png,image/webp" />
+          <p class="field-hint">JPEG, PNG, or WebP — up to 5 MB. Helps our techs come prepared with the right parts.</p>
+          <div class="photo-preview" id="photo-preview" hidden>
+            <img id="photo-preview-img" alt="Selected photo preview" />
+            <button type="button" class="btn btn-outline btn-sm" id="photo-remove-btn">Remove Photo</button>
+          </div>
+          <p class="form-status" id="photo-status" role="status"></p>
+        </div>
+
         <!-- honeypot field, hidden from real users -->
         <div class="hp-field" aria-hidden="true">
           <label for="website">Leave this field empty</label>

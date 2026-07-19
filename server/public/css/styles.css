@@ -580,6 +580,10 @@ button { font-family: inherit; cursor: pointer; }
 .form-status[data-state="success"] { color: #1a8f5e; }
 .form-status[data-state="error"] { color: #d64545; }
 #booking-submit { width: 100%; margin-top: 4px; }
+.field-hint { margin: 6px 0 0; font-size: 0.8rem; color: var(--color-slate-500); }
+.photo-preview { margin-top: 12px; display: flex; align-items: center; gap: 14px; }
+.photo-preview img { width: 84px; height: 84px; object-fit: cover; border-radius: var(--radius-sm); border: 1.5px solid rgba(12,27,46,0.15); }
+.btn-sm { padding: 8px 16px; font-size: 0.85rem; }
 
 /* FAQ */
 .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }

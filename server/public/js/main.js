@@ -278,6 +278,57 @@
     otherInput.addEventListener('input', syncHiddenDetail);
   }
 
+  // Optional photo upload: read the file client-side as a base64 data URL so it can
+  // ride along in the same JSON POST as the rest of the booking (no separate multipart
+  // request/endpoint to maintain). Validated client-side for a fast error message, and
+  // re-validated server-side (mimetype + real file signature + size) since client checks
+  // are trivially bypassable.
+  const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+  const photoInput = document.getElementById('photo');
+  const photoPreview = document.getElementById('photo-preview');
+  const photoPreviewImg = document.getElementById('photo-preview-img');
+  const photoRemoveBtn = document.getElementById('photo-remove-btn');
+  const photoStatus = document.getElementById('photo-status');
+  let selectedPhotoDataUrl = null;
+
+  function clearPhoto() {
+    selectedPhotoDataUrl = null;
+    if (photoInput) photoInput.value = '';
+    if (photoPreview) photoPreview.hidden = true;
+    if (photoPreviewImg) photoPreviewImg.src = '';
+    if (photoStatus) { photoStatus.textContent = ''; photoStatus.removeAttribute('data-state'); }
+  }
+
+  photoInput?.addEventListener('change', () => {
+    const file = photoInput.files && photoInput.files[0];
+    if (!file) { clearPhoto(); return; }
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      photoStatus.textContent = 'Please choose a JPEG, PNG, or WebP photo.';
+      photoStatus.setAttribute('data-state', 'error');
+      photoInput.value = '';
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      photoStatus.textContent = 'That photo is too large — please choose one under 5 MB.';
+      photoStatus.setAttribute('data-state', 'error');
+      photoInput.value = '';
+      return;
+    }
+
+    photoStatus.textContent = '';
+    photoStatus.removeAttribute('data-state');
+    const reader = new FileReader();
+    reader.onload = () => {
+      selectedPhotoDataUrl = reader.result;
+      if (photoPreviewImg) photoPreviewImg.src = selectedPhotoDataUrl;
+      if (photoPreview) photoPreview.hidden = false;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  photoRemoveBtn?.addEventListener('click', clearPhoto);
+
   // Booking form submit
   const form = document.getElementById('booking-form');
   const statusEl = document.getElementById('form-status');
@@ -288,6 +339,7 @@
 
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
+    if (selectedPhotoDataUrl) payload.photo = selectedPhotoDataUrl;
 
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -309,6 +361,7 @@
 
       if (res.ok && data.ok) {
         form.reset();
+        clearPhoto();
         statusEl.textContent = `Thanks! Your request (#${data.id}) was received — our dispatch team will call you shortly to confirm.`;
         statusEl.setAttribute('data-state', 'success');
         if (typeof window.gtag === 'function') {
