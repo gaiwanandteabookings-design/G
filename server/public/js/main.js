@@ -17,13 +17,40 @@
   // Phone fields: strip anything that isn't a digit or common formatting
   // character (+, (, ), -, space) as the user types, so letters/symbols
   // simply can't end up in a phone number — not just a post-submit error.
-  document.querySelectorAll('input[type="tel"]').forEach((input) => {
+  // Plain 10-digit US numbers are also auto-formatted as (305) 555-0100 as you
+  // type; a leading "+" (international number) is left unformatted but still
+  // stripped of invalid characters.
+  function formatPhoneValue(rawValue) {
+    const cleaned = rawValue.replace(/[^\d+()\-.\s]/g, '');
+    if (cleaned.trim().startsWith('+')) return cleaned;
+    let digits = cleaned.replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+    digits = digits.slice(0, 10);
+    if (!digits) return '';
+    if (digits.length < 4) return `(${digits}`;
+    if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  function attachPhoneFormatting(input) {
     input.setAttribute('inputmode', 'tel');
     input.addEventListener('input', () => {
-      const cleaned = input.value.replace(/[^\d+()\-.\s]/g, '');
-      if (cleaned !== input.value) input.value = cleaned;
+      const cursorPos = input.selectionStart;
+      const digitsBeforeCursor = input.value.slice(0, cursorPos).replace(/\D/g, '').length;
+      const formatted = formatPhoneValue(input.value);
+      if (formatted === input.value) return;
+      input.value = formatted;
+      let count = 0;
+      let newPos = formatted.length;
+      for (let i = 0; i < formatted.length; i++) {
+        if (/\d/.test(formatted[i])) count++;
+        if (count === digitsBeforeCursor) { newPos = i + 1; break; }
+      }
+      if (digitsBeforeCursor === 0) newPos = 0;
+      input.setSelectionRange(newPos, newPos);
     });
-  });
+  }
+  window.attachPhoneFormatting = attachPhoneFormatting;
+  document.querySelectorAll('input[type="tel"]').forEach(attachPhoneFormatting);
 
   // Subtle shadow once the page has scrolled past the hero
   const siteHeader = document.querySelector('.site-header');

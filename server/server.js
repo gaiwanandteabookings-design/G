@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
+const compression = require('compression');
 const path = require('node:path');
 
 const db = require('./db');
@@ -32,7 +33,27 @@ if (process.env.TRUST_PROXY === 'true') {
   app.set('trust proxy', 1);
 }
 
-app.use(helmet({ contentSecurityPolicy: false }));
+// A strict nonce-based CSP would require reworking every inline <script>/style="..."
+// attribute across the site (there are many) — not worth the risk right now. This
+// moderate policy still blocks the main threat (loading attacker JS from a third-party
+// host after an XSS injection) while allowing the inline code + third-party assets the
+// site actually uses (Google Fonts, GA4, Leaflet + its OpenStreetMap tiles).
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://www.googletagmanager.com', 'https://unpkg.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://unpkg.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'https://*.tile.openstreetmap.org'],
+      connectSrc: ["'self'", 'https://www.google-analytics.com', 'https://*.google-analytics.com', 'https://www.googletagmanager.com'],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'self'"],
+    },
+  },
+}));
+app.use(compression());
 
 if (IS_PRODUCTION) {
   app.use((req, res, next) => {
@@ -42,7 +63,10 @@ if (IS_PRODUCTION) {
 }
 
 app.use(express.json({ limit: '20kb' }));
-app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+// Short cache window rather than a long/immutable one — there's no cache-busting
+// filename hash on these assets, so a long cache would mean visitors keep seeing
+// stale CSS/JS for a while after every deploy.
+app.use(express.static(path.join(__dirname, 'public'), { index: false, maxAge: '1h' }));
 
 app.get('/', (req, res) => {
   res.type('html').send(renderLayout({ ...home.meta, bodyHtml: home.bodyHtml }));
@@ -81,6 +105,11 @@ app.get('/invoice/:publicId', (req, res) => {
 });
 
 app.post('/invoice/:publicId/sign', (req, res) => {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+  if (isSignRateLimited(ip)) {
+    return res.status(429).json({ ok: false, error: 'Too many attempts. Please try again later.' });
+  }
+
   const invoice = db.getInvoiceByPublicId(req.params.publicId);
   if (!invoice) return res.status(404).json({ ok: false, error: 'Invoice not found' });
   if (invoice.signed_name) return res.status(400).json({ ok: false, error: 'This invoice has already been signed.' });
@@ -130,6 +159,20 @@ function isRateLimited(ip) {
   timestamps.push(now);
   submissionsByIp.set(ip, timestamps);
   return timestamps.length > RATE_LIMIT_MAX;
+}
+
+// The invoice-sign endpoint is public (no login) so it needs its own limiter too —
+// otherwise it's an open door to spam/brute-force public_id guesses with no cost.
+const signAttemptsByIp = new Map();
+const SIGN_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const SIGN_RATE_LIMIT_MAX = 10;
+
+function isSignRateLimited(ip) {
+  const now = Date.now();
+  const timestamps = (signAttemptsByIp.get(ip) || []).filter((t) => now - t < SIGN_RATE_LIMIT_WINDOW_MS);
+  timestamps.push(now);
+  signAttemptsByIp.set(ip, timestamps);
+  return timestamps.length > SIGN_RATE_LIMIT_MAX;
 }
 
 function cleanString(value, maxLen) {

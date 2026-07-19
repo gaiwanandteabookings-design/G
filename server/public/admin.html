@@ -223,11 +223,34 @@
     return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  function formatPhoneValue(rawValue) {
+    const cleaned = rawValue.replace(/[^\d+()\-.\s]/g, '');
+    if (cleaned.trim().startsWith('+')) return cleaned;
+    let digits = cleaned.replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+    digits = digits.slice(0, 10);
+    if (!digits) return '';
+    if (digits.length < 4) return `(${digits}`;
+    if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
   document.querySelectorAll('input[type="tel"]').forEach((input) => {
     input.setAttribute('inputmode', 'tel');
     input.addEventListener('input', () => {
-      const cleaned = input.value.replace(/[^\d+()\-.\s]/g, '');
-      if (cleaned !== input.value) input.value = cleaned;
+      const cursorPos = input.selectionStart;
+      const digitsBeforeCursor = input.value.slice(0, cursorPos).replace(/\D/g, '').length;
+      const formatted = formatPhoneValue(input.value);
+      if (formatted === input.value) return;
+      input.value = formatted;
+      let count = 0;
+      let newPos = formatted.length;
+      for (let i = 0; i < formatted.length; i++) {
+        if (/\d/.test(formatted[i])) count++;
+        if (count === digitsBeforeCursor) { newPos = i + 1; break; }
+      }
+      if (digitsBeforeCursor === 0) newPos = 0;
+      input.setSelectionRange(newPos, newPos);
     });
   });
 
@@ -545,7 +568,11 @@
     }
 
     const btn = sendNow ? document.getElementById('save-send-btn') : document.getElementById('save-draft-btn');
+    const otherBtn = sendNow ? document.getElementById('save-draft-btn') : document.getElementById('save-send-btn');
+    // Disable both action buttons, not just the one clicked — otherwise clicking
+    // the other button before this request finishes creates a second invoice.
     btn.disabled = true;
+    otherBtn.disabled = true;
     const originalText = btn.textContent;
     btn.textContent = sendNow ? 'Sending…' : 'Saving…';
 
@@ -569,6 +596,7 @@
       showBanner('Network error — try again.', true);
     } finally {
       btn.disabled = false;
+      otherBtn.disabled = false;
       btn.textContent = originalText;
     }
   }
