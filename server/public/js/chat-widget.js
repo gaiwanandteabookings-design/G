@@ -39,6 +39,7 @@
     { key: 'issueDescription', bot: "Briefly, what's happening with it?", type: 'text', placeholder: 'e.g. walk-in cooler not holding temp' },
     { key: 'name', bot: "What's your name?", type: 'text', placeholder: 'Full name' },
     { key: 'phone', bot: 'Best phone number to reach you?', type: 'tel', placeholder: '(305) 555-0100' },
+    { key: 'email', bot: 'And your email? (so we can send a confirmation)', type: 'email', placeholder: 'you@email.com' },
     { key: 'address', bot: "Last thing — what's the service address?", type: 'text', placeholder: 'Street, city' },
   ];
 
@@ -202,7 +203,7 @@
         body: JSON.stringify({
           name: answers.name,
           phone: answers.phone,
-          email: '',
+          email: answers.email,
           businessName: '',
           address: answers.address,
           equipmentType: answers.equipmentType,

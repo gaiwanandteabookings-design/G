@@ -355,8 +355,8 @@ const bodyHtml = `
 
         <div class="form-row">
           <div class="form-field">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" autocomplete="email" maxlength="160" />
+            <label for="email">Email*</label>
+            <input type="email" id="email" name="email" autocomplete="email" maxlength="160" required />
           </div>
           <div class="form-field">
             <label for="businessName">Business Name</label>
