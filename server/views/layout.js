@@ -145,6 +145,7 @@ function renderLayout({ title, description, keywords, canonical, ogTitle, ogDesc
 <title>${title}</title>
 <meta name="description" content="${description}" />
 ${keywords ? `<meta name="keywords" content="${keywords}" />\n` : ''}<link rel="canonical" href="${canonicalUrl}" />
+<meta name="msvalidate.01" content="12AB36C16684B8FCA2F0192B54BA3847" />
 
 <meta property="og:type" content="website" />
 <meta property="og:title" content="${ogTitle || title}" />
