@@ -14,6 +14,17 @@
     setInterval(tick, 15000);
   }
 
+  // Phone fields: strip anything that isn't a digit or common formatting
+  // character (+, (, ), -, space) as the user types, so letters/symbols
+  // simply can't end up in a phone number — not just a post-submit error.
+  document.querySelectorAll('input[type="tel"]').forEach((input) => {
+    input.setAttribute('inputmode', 'tel');
+    input.addEventListener('input', () => {
+      const cleaned = input.value.replace(/[^\d+()\-.\s]/g, '');
+      if (cleaned !== input.value) input.value = cleaned;
+    });
+  });
+
   // Subtle shadow once the page has scrolled past the hero
   const siteHeader = document.querySelector('.site-header');
   if (siteHeader) {

@@ -44,7 +44,7 @@ function buildInvoiceView(invoice) {
           <p class="label">Customer Acceptance</p>
           <p class="invoice-sign-hint">Type your full name to confirm the work above was completed and accept this invoice.</p>
           <div class="invoice-sign-row">
-            <input type="text" id="signed-name-input" placeholder="Full name" />
+            <input type="text" id="signed-name-input" placeholder="Full name" maxlength="160" />
             <button type="button" class="btn btn-primary" id="sign-btn">Accept &amp; Sign</button>
           </div>
           <p class="invoice-sign-status" id="sign-status" role="status"></p>

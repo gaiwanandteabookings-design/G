@@ -86,6 +86,13 @@
     if (multiline) input.rows = 2;
     else input.type = type || 'text';
     input.placeholder = placeholder || '';
+    if (input.type === 'tel') {
+      input.setAttribute('inputmode', 'tel');
+      input.addEventListener('input', () => {
+        const cleaned = input.value.replace(/[^\d+()\-.\s]/g, '');
+        if (cleaned !== input.value) input.value = cleaned;
+      });
+    }
 
     const sendBtn = document.createElement('button');
     sendBtn.type = 'button';
