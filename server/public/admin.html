@@ -62,6 +62,8 @@
   .notify-badge.notify-sent { color:#1a8f5e; }
   .notify-badge.notify-failed { color:#b3261e; }
   select.status { padding:5px 8px; border-radius:6px; border:1px solid var(--line); font-size:.8rem; }
+  .booking-thumb { display:block; width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid var(--line); margin-top:6px; }
+  header .link-btn { background:#fff; border-color:#fff; }
   .empty { text-align:center; padding: 60px 20px; color: var(--slate); }
   .row-actions { display:flex; gap:6px; flex-wrap: wrap; }
   a.link-btn { display:inline-block; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); color: var(--navy); font-size: .8rem; font-weight: 600; text-decoration:none; }
@@ -120,7 +122,10 @@
 <div id="app" class="hidden">
   <header>
     <h1>ProFix<em>305</em> — Admin</h1>
-    <button id="logout">Log out</button>
+    <div style="display:flex; gap:10px;">
+      <a id="export-data" class="link-btn" href="#" title="Download a JSON backup of all bookings and invoices — useful for accounting records">Export Data</a>
+      <button id="logout">Log out</button>
+    </div>
   </header>
   <main>
     <div class="tabs" role="tablist">
@@ -165,17 +170,17 @@
     <div class="field-row">
       <div class="field">
         <label for="inv-name">Customer Name*</label>
-        <input type="text" id="inv-name" />
+        <input type="text" id="inv-name" maxlength="160" />
       </div>
       <div class="field">
         <label for="inv-email">Email*</label>
-        <input type="email" id="inv-email" required />
+        <input type="email" id="inv-email" maxlength="160" required />
       </div>
     </div>
     <div class="field-row">
       <div class="field">
         <label for="inv-phone">Phone*</label>
-        <input type="tel" id="inv-phone" required />
+        <input type="tel" id="inv-phone" maxlength="40" required />
       </div>
       <div class="field">
         <label for="inv-tax">Tax Rate (%)</label>
@@ -184,7 +189,7 @@
     </div>
     <div class="field">
       <label for="inv-address">Service Address</label>
-      <input type="text" id="inv-address" />
+      <input type="text" id="inv-address" maxlength="240" />
     </div>
 
     <div class="field">
@@ -195,7 +200,7 @@
 
     <div class="field">
       <label for="inv-notes">Notes (optional)</label>
-      <textarea id="inv-notes" rows="2"></textarea>
+      <textarea id="inv-notes" rows="2" maxlength="1000"></textarea>
     </div>
 
     <div class="invoice-summary" id="invoice-summary"></div>
@@ -214,6 +219,45 @@
   const usernameInput = document.getElementById('username-input');
   const passwordInput = document.getElementById('password-input');
   const gateError = document.getElementById('gate-error');
+
+  // Booking/invoice data comes from the public site (anyone can submit a
+  // booking) so it must be escaped before going into innerHTML here — otherwise
+  // a booking name/address/etc. like "<img src=x onerror=...>" would execute
+  // in the admin's browser session when this list renders.
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function formatPhoneValue(rawValue) {
+    const cleaned = rawValue.replace(/[^\d+()\-.\s]/g, '');
+    if (cleaned.trim().startsWith('+')) return cleaned;
+    let digits = cleaned.replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+    digits = digits.slice(0, 10);
+    if (!digits) return '';
+    if (digits.length < 4) return `(${digits}`;
+    if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
+  document.querySelectorAll('input[type="tel"]').forEach((input) => {
+    input.setAttribute('inputmode', 'tel');
+    input.addEventListener('input', () => {
+      const cursorPos = input.selectionStart;
+      const digitsBeforeCursor = input.value.slice(0, cursorPos).replace(/\D/g, '').length;
+      const formatted = formatPhoneValue(input.value);
+      if (formatted === input.value) return;
+      input.value = formatted;
+      let count = 0;
+      let newPos = formatted.length;
+      for (let i = 0; i < formatted.length; i++) {
+        if (/\d/.test(formatted[i])) count++;
+        if (count === digitsBeforeCursor) { newPos = i + 1; break; }
+      }
+      if (digitsBeforeCursor === 0) newPos = 0;
+      input.setSelectionRange(newPos, newPos);
+    });
+  });
 
   function fmtDate(dateStr) {
     return new Date(dateStr).toLocaleString('en-US', {
@@ -282,6 +326,11 @@
     el.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('gate-submit').click(); });
   });
 
+  document.getElementById('export-data').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = `/api/admin/export?token=${encodeURIComponent(getToken())}`;
+  });
+
   document.getElementById('logout').addEventListener('click', async () => {
     try { await apiFetch('/api/admin/logout', { method: 'POST' }); } catch (e) {}
     clearToken();
@@ -332,12 +381,12 @@
     const rows = bookings.map((b) => `
       <tr>
         <td>#${b.id}<br><small>${fmtDate(b.created_at)}</small>${notifyBadge(b.notify_status) ? `<br>${notifyBadge(b.notify_status)}` : ''}</td>
-        <td>${b.name}<br><small>${b.business_name || ''}</small></td>
-        <td><a href="tel:${b.phone}">${b.phone}</a>${b.email ? `<br><a href="mailto:${b.email}">${b.email}</a>` : ''}</td>
-        <td>${b.address}</td>
-        <td>${b.equipment_type}${b.equipment_detail ? `<br><small>${b.equipment_detail}</small>` : ''}</td>
-        <td>${urgencyBadge(b.urgency)}<br><small>${b.preferred_date || ''} ${b.preferred_time || ''}</small></td>
-        <td style="max-width:200px;">${b.issue_description}</td>
+        <td>${esc(b.name)}<br><small>${esc(b.business_name || '')}</small></td>
+        <td><a href="tel:${esc(b.phone)}">${esc(b.phone)}</a>${b.email ? `<br><a href="mailto:${esc(b.email)}">${esc(b.email)}</a>` : ''}</td>
+        <td>${esc(b.address)}</td>
+        <td>${esc(b.equipment_type)}${b.equipment_detail ? `<br><small>${esc(b.equipment_detail)}</small>` : ''}</td>
+        <td>${urgencyBadge(b.urgency)}<br><small>${esc(b.preferred_date || '')} ${esc(b.preferred_time || '')}</small></td>
+        <td style="max-width:200px;">${esc(b.issue_description)}${b.has_photo ? `<br><a href="/api/bookings/${b.id}/photo?token=${encodeURIComponent(getToken())}" target="_blank" rel="noopener"><img class="booking-thumb" src="/api/bookings/${b.id}/photo?token=${encodeURIComponent(getToken())}" alt="Photo of the issue" loading="lazy" /></a>` : ''}</td>
         <td>
           <select class="status" data-id="${b.id}">
             ${['new','contacted','scheduled','completed','cancelled'].map((s) => `<option value="${s}" ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}
@@ -396,9 +445,9 @@
     const rows = invoices.map((inv) => `
       <tr>
         <td>${inv.invoice_number}<br><small>${fmtDate(inv.created_at)}</small></td>
-        <td>${inv.customer_name}<br><small>${inv.customer_email || ''}</small></td>
+        <td>${esc(inv.customer_name)}<br><small>${esc(inv.customer_email || '')}</small></td>
         <td>${money(inv.totals.total)}</td>
-        <td><span class="badge ${inv.status}">${inv.status}</span>${inv.signed_name ? `<br><small>Signed by ${inv.signed_name}</small>` : ''}</td>
+        <td><span class="badge ${inv.status}">${inv.status}</span>${inv.signed_name ? `<br><small>Signed by ${esc(inv.signed_name)}</small>` : ''}</td>
         <td>
           <div class="row-actions">
             <a class="link-btn" href="/api/invoices/${inv.id}/pdf?token=${encodeURIComponent(getToken())}" target="_blank" rel="noopener">PDF</a>
@@ -454,7 +503,7 @@
     row.className = 'line-item-row';
     row.innerHTML = `
       <input type="text" placeholder="Description" class="li-desc" value="${item?.description || ''}" />
-      <input type="number" placeholder="Qty" class="li-qty" min="0" step="1" value="${item?.qty ?? 1}" />
+      <input type="number" placeholder="Qty" class="li-qty" min="1" step="1" value="${item?.qty ?? 1}" />
       <input type="number" placeholder="Unit price" class="li-price" min="0" step="0.01" value="${item?.unitPrice ?? ''}" />
       <span class="line-item-total">$0.00</span>
       <button type="button" class="remove-item" aria-label="Remove line item">&times;</button>
@@ -529,7 +578,11 @@
     }
 
     const btn = sendNow ? document.getElementById('save-send-btn') : document.getElementById('save-draft-btn');
+    const otherBtn = sendNow ? document.getElementById('save-draft-btn') : document.getElementById('save-send-btn');
+    // Disable both action buttons, not just the one clicked — otherwise clicking
+    // the other button before this request finishes creates a second invoice.
     btn.disabled = true;
+    otherBtn.disabled = true;
     const originalText = btn.textContent;
     btn.textContent = sendNow ? 'Sending…' : 'Saving…';
 
@@ -553,6 +606,7 @@
       showBanner('Network error — try again.', true);
     } finally {
       btn.disabled = false;
+      otherBtn.disabled = false;
       btn.textContent = originalText;
     }
   }

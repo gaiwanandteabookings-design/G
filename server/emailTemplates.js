@@ -1,14 +1,11 @@
 const { PHONE_DISPLAY, EMAIL } = require('./views/layout');
+const { escapeHtml } = require('./htmlUtils');
 
 const NAVY = '#0c1b2e';
 const CYAN = '#0e9bab';
 const SLATE = '#5a6b82';
 const BORDER = '#e2e8f0';
 const BG = '#eef2f6';
-
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
 
 function detailRow(label, value) {
   if (!value) return '';

@@ -67,12 +67,25 @@ async function notifyNewBooking(booking) {
     ctaUrl: `${SITE_URL}/admin.html`,
   });
 
+  const PHOTO_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+  const attachments = booking.photo_data
+    ? [
+        {
+          filename: `booking-${booking.id}-photo.${PHOTO_EXT[booking.photo_mime] || 'jpg'}`,
+          content: booking.photo_data,
+          type: booking.photo_mime || 'image/jpeg',
+          disposition: 'attachment',
+        },
+      ]
+    : undefined;
+
   return send({
     to,
     from: parseFrom(process.env.FROM_EMAIL),
     subject: `Новая заявка на ремонт (#${booking.id}) — ${isEmergency ? 'Срочная' : 'Плановая'}`,
     text: lines.join('\n'),
     html,
+    ...(attachments ? { attachments } : {}),
   });
 }
 

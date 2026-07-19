@@ -35,8 +35,8 @@ function withComputed(invoice) {
   return { ...invoice, invoice_number: invoiceNumber(invoice.id), totals: computeTotals(invoice.line_items, invoice.tax_rate) };
 }
 
-router.get('/', (req, res) => {
-  res.json({ ok: true, invoices: db.listInvoices().map(withComputed) });
+router.get('/', async (req, res) => {
+  res.json({ ok: true, invoices: (await db.listInvoices()).map(withComputed) });
 });
 
 router.post('/', async (req, res) => {
@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
   if (!lineItems) return res.status(400).json({ ok: false, error: 'Add at least one valid line item (description, qty > 0, unit price >= 0).' });
   if (taxRate < 0 || taxRate > 100) return res.status(400).json({ ok: false, error: 'Tax rate must be between 0 and 100.' });
 
-  const id = db.insertInvoice({
+  const id = await db.insertInvoice({
     bookingId,
     customerName,
     customerEmail,
@@ -69,27 +69,27 @@ router.post('/', async (req, res) => {
     notes,
   });
 
-  let invoice = db.getInvoice(id);
+  let invoice = await db.getInvoice(id);
 
   if (body.sendNow) {
     const result = await sendInvoiceNow(invoice);
     if (!result.ok) {
       return res.status(201).json({ ok: true, id, sendError: result.error });
     }
-    invoice = db.getInvoice(id);
+    invoice = await db.getInvoice(id);
   }
 
   res.status(201).json({ ok: true, id, invoice: withComputed(invoice) });
 });
 
-router.get('/:id', (req, res) => {
-  const invoice = db.getInvoice(Number(req.params.id));
+router.get('/:id', async (req, res) => {
+  const invoice = await db.getInvoice(Number(req.params.id));
   if (!invoice) return res.status(404).json({ ok: false, error: 'Invoice not found' });
   res.json({ ok: true, invoice: withComputed(invoice) });
 });
 
 router.get('/:id/pdf', async (req, res) => {
-  const invoice = db.getInvoice(Number(req.params.id));
+  const invoice = await db.getInvoice(Number(req.params.id));
   if (!invoice) return res.status(404).json({ ok: false, error: 'Invoice not found' });
   const pdfBuffer = await buildInvoicePdf(invoice);
   res.set('Content-Type', 'application/pdf');
@@ -102,28 +102,28 @@ async function sendInvoiceNow(invoice) {
   const viewUrl = `${SITE_URL}/invoice/${invoice.public_id}/`;
   const result = await sendInvoiceEmail(invoice, pdfBuffer, viewUrl);
   if (result.ok) {
-    db.updateInvoiceStatus(invoice.id, 'sent');
+    await db.updateInvoiceStatus(invoice.id, 'sent');
   }
   return result;
 }
 
 router.post('/:id/send', async (req, res) => {
-  const invoice = db.getInvoice(Number(req.params.id));
+  const invoice = await db.getInvoice(Number(req.params.id));
   if (!invoice) return res.status(404).json({ ok: false, error: 'Invoice not found' });
 
   const result = await sendInvoiceNow(invoice);
   if (!result.ok) return res.status(422).json({ ok: false, error: result.error });
 
-  res.json({ ok: true, invoice: withComputed(db.getInvoice(invoice.id)) });
+  res.json({ ok: true, invoice: withComputed(await db.getInvoice(invoice.id)) });
 });
 
-router.patch('/:id/status', (req, res) => {
+router.patch('/:id/status', async (req, res) => {
   const id = Number(req.params.id);
   const status = cleanString(req.body?.status, 20);
   if (!id || !STATUSES.has(status)) {
     return res.status(400).json({ ok: false, error: 'Invalid status.' });
   }
-  const updated = db.updateInvoiceStatus(id, status);
+  const updated = await db.updateInvoiceStatus(id, status);
   if (!updated) return res.status(404).json({ ok: false, error: 'Invoice not found' });
   res.json({ ok: true });
 });

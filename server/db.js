@@ -1,116 +1,156 @@
-const { DatabaseSync } = require('node:sqlite');
+const { createClient } = require('@libsql/client');
 const path = require('node:path');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 
-const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const DATA_DIR = process.env.TURSO_DATABASE_URL ? null : path.join(__dirname, 'data');
+if (DATA_DIR && !fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const db = new DatabaseSync(path.join(DATA_DIR, 'bookings.db'));
+// TURSO_DATABASE_URL (libsql://...) + TURSO_AUTH_TOKEN make this a real, persistent,
+// hosted database (data survives every redeploy). Without them it falls back to a local
+// file — fine for local dev, but on Render's free tier that file is wiped on every
+// deploy since the disk isn't persistent there.
+const db = createClient({
+  url: process.env.TURSO_DATABASE_URL || `file:${path.join(DATA_DIR, 'bookings.db')}`,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS bookings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    phone TEXT NOT NULL,
-    email TEXT,
-    business_name TEXT,
-    address TEXT NOT NULL,
-    equipment_type TEXT NOT NULL,
-    equipment_detail TEXT,
-    issue_description TEXT NOT NULL,
-    urgency TEXT NOT NULL,
-    preferred_date TEXT,
-    preferred_time TEXT,
-    status TEXT NOT NULL DEFAULT 'new',
-    notify_status TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`);
+// Once real data lives in a database that actually persists, we can no longer just
+// drop/recreate tables to change the schema — so new columns get added here, guarded
+// by a check against the table's current columns, instead of baking them into CREATE TABLE.
+async function addColumnIfMissing(table, column, definition) {
+  const { rows } = await db.execute(`PRAGMA table_info(${table})`);
+  const exists = rows.some((row) => row.name === column);
+  if (!exists) {
+    await db.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
 
-const insertBookingStmt = db.prepare(`
-  INSERT INTO bookings (
-    name, phone, email, business_name, address, equipment_type, equipment_detail,
-    issue_description, urgency, preferred_date, preferred_time
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-`);
+const ready = (async () => {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS bookings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      email TEXT,
+      business_name TEXT,
+      address TEXT NOT NULL,
+      equipment_type TEXT NOT NULL,
+      equipment_detail TEXT,
+      issue_description TEXT NOT NULL,
+      urgency TEXT NOT NULL,
+      preferred_date TEXT,
+      preferred_time TEXT,
+      status TEXT NOT NULL DEFAULT 'new',
+      notify_status TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  await addColumnIfMissing('bookings', 'photo_data', 'TEXT');
+  await addColumnIfMissing('bookings', 'photo_mime', 'TEXT');
 
-function insertBooking(b) {
-  const result = insertBookingStmt.run(
-    b.name,
-    b.phone,
-    b.email || null,
-    b.businessName || null,
-    b.address,
-    b.equipmentType,
-    b.equipmentDetail || null,
-    b.issueDescription,
-    b.urgency,
-    b.preferredDate || null,
-    b.preferredTime || null
-  );
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS invoices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      public_id TEXT NOT NULL UNIQUE,
+      booking_id INTEGER,
+      customer_name TEXT NOT NULL,
+      customer_email TEXT,
+      customer_phone TEXT,
+      customer_address TEXT,
+      line_items TEXT NOT NULL,
+      tax_rate REAL NOT NULL DEFAULT 0,
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      sent_at TEXT,
+      paid_at TEXT,
+      signed_name TEXT,
+      signed_at TEXT,
+      FOREIGN KEY (booking_id) REFERENCES bookings (id)
+    )
+  `);
+})();
+
+async function insertBooking(b) {
+  const result = await db.execute({
+    sql: `
+      INSERT INTO bookings (
+        name, phone, email, business_name, address, equipment_type, equipment_detail,
+        issue_description, urgency, preferred_date, preferred_time, photo_data, photo_mime
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      b.name,
+      b.phone,
+      b.email || null,
+      b.businessName || null,
+      b.address,
+      b.equipmentType,
+      b.equipmentDetail || null,
+      b.issueDescription,
+      b.urgency,
+      b.preferredDate || null,
+      b.preferredTime || null,
+      b.photoData || null,
+      b.photoMime || null,
+    ],
+  });
   return Number(result.lastInsertRowid);
 }
 
-function listBookings() {
-  return db.prepare('SELECT * FROM bookings ORDER BY created_at DESC').all();
+async function listBookings() {
+  const { rows } = await db.execute(`
+    SELECT id, name, phone, email, business_name, address, equipment_type, equipment_detail,
+      issue_description, urgency, preferred_date, preferred_time, status, notify_status, created_at,
+      (photo_data IS NOT NULL) AS has_photo
+    FROM bookings ORDER BY created_at DESC
+  `);
+  return rows;
 }
 
-function getBooking(id) {
-  return db.prepare('SELECT * FROM bookings WHERE id = ?').get(id);
+async function getBooking(id) {
+  const { rows } = await db.execute({ sql: 'SELECT * FROM bookings WHERE id = ?', args: [id] });
+  return rows[0];
 }
 
-function updateBookingStatus(id, status) {
-  const result = db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(status, id);
-  return result.changes > 0;
+async function getBookingPhoto(id) {
+  const { rows } = await db.execute({ sql: 'SELECT photo_data, photo_mime FROM bookings WHERE id = ?', args: [id] });
+  return rows[0];
 }
 
-function updateNotifyStatus(id, notifyStatus) {
-  db.prepare('UPDATE bookings SET notify_status = ? WHERE id = ?').run(notifyStatus, id);
+async function updateBookingStatus(id, status) {
+  const result = await db.execute({ sql: 'UPDATE bookings SET status = ? WHERE id = ?', args: [status, id] });
+  return result.rowsAffected > 0;
 }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS invoices (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    public_id TEXT NOT NULL UNIQUE,
-    booking_id INTEGER,
-    customer_name TEXT NOT NULL,
-    customer_email TEXT,
-    customer_phone TEXT,
-    customer_address TEXT,
-    line_items TEXT NOT NULL,
-    tax_rate REAL NOT NULL DEFAULT 0,
-    notes TEXT,
-    status TEXT NOT NULL DEFAULT 'draft',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    sent_at TEXT,
-    paid_at TEXT,
-    signed_name TEXT,
-    signed_at TEXT,
-    FOREIGN KEY (booking_id) REFERENCES bookings (id)
-  )
-`);
+async function updateNotifyStatus(id, notifyStatus) {
+  await db.execute({ sql: 'UPDATE bookings SET notify_status = ? WHERE id = ?', args: [notifyStatus, id] });
+}
 
-const insertInvoiceStmt = db.prepare(`
+const insertInvoiceSql = `
   INSERT INTO invoices (
     public_id, booking_id, customer_name, customer_email, customer_phone,
     customer_address, line_items, tax_rate, notes
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-`);
+`;
 
-function insertInvoice(inv) {
+async function insertInvoice(inv) {
   const publicId = crypto.randomBytes(12).toString('hex');
-  const result = insertInvoiceStmt.run(
-    publicId,
-    inv.bookingId || null,
-    inv.customerName,
-    inv.customerEmail || null,
-    inv.customerPhone || null,
-    inv.customerAddress || null,
-    JSON.stringify(inv.lineItems),
-    inv.taxRate || 0,
-    inv.notes || null
-  );
+  const result = await db.execute({
+    sql: insertInvoiceSql,
+    args: [
+      publicId,
+      inv.bookingId || null,
+      inv.customerName,
+      inv.customerEmail || null,
+      inv.customerPhone || null,
+      inv.customerAddress || null,
+      JSON.stringify(inv.lineItems),
+      inv.taxRate || 0,
+      inv.notes || null,
+    ],
+  });
   return Number(result.lastInsertRowid);
 }
 
@@ -119,38 +159,60 @@ function parseInvoiceRow(row) {
   return { ...row, line_items: JSON.parse(row.line_items) };
 }
 
-function listInvoices() {
-  return db.prepare('SELECT * FROM invoices ORDER BY created_at DESC').all().map(parseInvoiceRow);
+async function listInvoices() {
+  const { rows } = await db.execute('SELECT * FROM invoices ORDER BY created_at DESC');
+  return rows.map(parseInvoiceRow);
 }
 
-function getInvoice(id) {
-  return parseInvoiceRow(db.prepare('SELECT * FROM invoices WHERE id = ?').get(id));
+async function getInvoice(id) {
+  const { rows } = await db.execute({ sql: 'SELECT * FROM invoices WHERE id = ?', args: [id] });
+  return parseInvoiceRow(rows[0]);
 }
 
-function getInvoiceByPublicId(publicId) {
-  return parseInvoiceRow(db.prepare('SELECT * FROM invoices WHERE public_id = ?').get(publicId));
+async function getInvoiceByPublicId(publicId) {
+  const { rows } = await db.execute({ sql: 'SELECT * FROM invoices WHERE public_id = ?', args: [publicId] });
+  return parseInvoiceRow(rows[0]);
 }
 
-function updateInvoiceStatus(id, status) {
+async function updateInvoiceStatus(id, status) {
   const timestampCol = status === 'sent' ? 'sent_at' : status === 'paid' ? 'paid_at' : null;
   const sql = timestampCol
     ? `UPDATE invoices SET status = ?, ${timestampCol} = datetime('now') WHERE id = ?`
     : 'UPDATE invoices SET status = ? WHERE id = ?';
-  const result = db.prepare(sql).run(status, id);
-  return result.changes > 0;
+  const result = await db.execute({ sql, args: [status, id] });
+  return result.rowsAffected > 0;
 }
 
-function signInvoice(id, signedName) {
-  const result = db
-    .prepare("UPDATE invoices SET signed_name = ?, signed_at = datetime('now') WHERE id = ? AND signed_name IS NULL")
-    .run(signedName, id);
-  return result.changes > 0;
+async function signInvoice(id, signedName) {
+  const result = await db.execute({
+    sql: "UPDATE invoices SET signed_name = ?, signed_at = datetime('now') WHERE id = ? AND signed_name IS NULL",
+    args: [signedName, id],
+  });
+  return result.rowsAffected > 0;
+}
+
+async function exportAllData() {
+  const [bookings, invoices] = await Promise.all([
+    db.execute(`
+      SELECT id, name, phone, email, business_name, address, equipment_type, equipment_detail,
+        issue_description, urgency, preferred_date, preferred_time, status, notify_status, created_at
+      FROM bookings ORDER BY id ASC
+    `),
+    db.execute('SELECT * FROM invoices ORDER BY id ASC'),
+  ]);
+  return {
+    exportedAt: new Date().toISOString(),
+    bookings: bookings.rows,
+    invoices: invoices.rows.map(parseInvoiceRow),
+  };
 }
 
 module.exports = {
+  ready,
   insertBooking,
   listBookings,
   getBooking,
+  getBookingPhoto,
   updateBookingStatus,
   updateNotifyStatus,
   insertInvoice,
@@ -159,4 +221,5 @@ module.exports = {
   getInvoiceByPublicId,
   updateInvoiceStatus,
   signInvoice,
+  exportAllData,
 };

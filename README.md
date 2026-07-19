@@ -143,13 +143,36 @@ This repo includes `render.yaml` at the root, so Render can deploy it automatica
 - The free plan spins the service down after ~15 minutes of no traffic and takes ~30-60s
   to wake back up on the next visit — fine for showing someone the site, not ideal for a
   real launch expecting instant response on every visit (paid plan removes this).
-- The free plan has **no persistent disk**, so `server/data/bookings.db` gets wiped on
-  every redeploy and periodically on restart. Fine for a demo/preview; before a real
-  launch taking real bookings, either add a paid persistent disk in the Render dashboard,
-  or point the app at a hosted database instead.
+- The free plan has **no persistent disk** — without the Turso setup below,
+  `server/data/bookings.db` gets wiped on every redeploy, taking every booking and
+  invoice with it. Do the Turso setup before taking any real bookings.
 - Find your live `ADMIN_PASSWORD` under the service's **Environment** tab in the Render
   dashboard (Render generated a random one for you — it's not `1234`) to sign in at
   `/admin.html`.
+
+### Making bookings/invoices survive redeploys (Turso setup — do this before real launch)
+
+The app already speaks to [Turso](https://turso.tech) (a hosted, SQLite-compatible
+database with a permanent free tier — no credit card needed) via `TURSO_DATABASE_URL` /
+`TURSO_AUTH_TOKEN`. Without those two env vars set, it silently falls back to the local
+file that Render wipes on every deploy. To turn on real persistence:
+
+1. Sign up at [turso.tech](https://turso.tech) (GitHub login works).
+2. Create a database — via their web dashboard ("Create Database", any name/region), or
+   via their CLI (`turso db create profix305`) if you prefer the command line.
+3. Get the two values the app needs:
+   - **Database URL**: dashboard → your database → shown as `libsql://...` (or
+     `turso db show profix305 --url` via CLI).
+   - **Auth token**: dashboard → your database → "Create Token" (or
+     `turso db tokens create profix305` via CLI).
+4. In the Render dashboard → your service → **Environment** tab, add:
+   - `TURSO_DATABASE_URL` = the `libsql://...` URL from step 3
+   - `TURSO_AUTH_TOKEN` = the token from step 3
+5. Render redeploys automatically when you save env vars. From then on, every booking
+   and invoice lives in Turso and survives deploys, restarts, and disk resets.
+
+Locally (no Turso account needed for development), the app just uses a local file at
+`server/data/bookings.db` automatically whenever `TURSO_DATABASE_URL` isn't set.
 
 ### General checklist (any host)
 

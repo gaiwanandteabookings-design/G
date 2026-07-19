@@ -14,6 +14,44 @@
     setInterval(tick, 15000);
   }
 
+  // Phone fields: strip anything that isn't a digit or common formatting
+  // character (+, (, ), -, space) as the user types, so letters/symbols
+  // simply can't end up in a phone number — not just a post-submit error.
+  // Plain 10-digit US numbers are also auto-formatted as (305) 555-0100 as you
+  // type; a leading "+" (international number) is left unformatted but still
+  // stripped of invalid characters.
+  function formatPhoneValue(rawValue) {
+    const cleaned = rawValue.replace(/[^\d+()\-.\s]/g, '');
+    if (cleaned.trim().startsWith('+')) return cleaned;
+    let digits = cleaned.replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+    digits = digits.slice(0, 10);
+    if (!digits) return '';
+    if (digits.length < 4) return `(${digits}`;
+    if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  function attachPhoneFormatting(input) {
+    input.setAttribute('inputmode', 'tel');
+    input.addEventListener('input', () => {
+      const cursorPos = input.selectionStart;
+      const digitsBeforeCursor = input.value.slice(0, cursorPos).replace(/\D/g, '').length;
+      const formatted = formatPhoneValue(input.value);
+      if (formatted === input.value) return;
+      input.value = formatted;
+      let count = 0;
+      let newPos = formatted.length;
+      for (let i = 0; i < formatted.length; i++) {
+        if (/\d/.test(formatted[i])) count++;
+        if (count === digitsBeforeCursor) { newPos = i + 1; break; }
+      }
+      if (digitsBeforeCursor === 0) newPos = 0;
+      input.setSelectionRange(newPos, newPos);
+    });
+  }
+  window.attachPhoneFormatting = attachPhoneFormatting;
+  document.querySelectorAll('input[type="tel"]').forEach(attachPhoneFormatting);
+
   // Subtle shadow once the page has scrolled past the hero
   const siteHeader = document.querySelector('.site-header');
   if (siteHeader) {
@@ -240,6 +278,57 @@
     otherInput.addEventListener('input', syncHiddenDetail);
   }
 
+  // Optional photo upload: read the file client-side as a base64 data URL so it can
+  // ride along in the same JSON POST as the rest of the booking (no separate multipart
+  // request/endpoint to maintain). Validated client-side for a fast error message, and
+  // re-validated server-side (mimetype + real file signature + size) since client checks
+  // are trivially bypassable.
+  const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+  const photoInput = document.getElementById('photo');
+  const photoPreview = document.getElementById('photo-preview');
+  const photoPreviewImg = document.getElementById('photo-preview-img');
+  const photoRemoveBtn = document.getElementById('photo-remove-btn');
+  const photoStatus = document.getElementById('photo-status');
+  let selectedPhotoDataUrl = null;
+
+  function clearPhoto() {
+    selectedPhotoDataUrl = null;
+    if (photoInput) photoInput.value = '';
+    if (photoPreview) photoPreview.hidden = true;
+    if (photoPreviewImg) photoPreviewImg.src = '';
+    if (photoStatus) { photoStatus.textContent = ''; photoStatus.removeAttribute('data-state'); }
+  }
+
+  photoInput?.addEventListener('change', () => {
+    const file = photoInput.files && photoInput.files[0];
+    if (!file) { clearPhoto(); return; }
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      photoStatus.textContent = 'Please choose a JPEG, PNG, or WebP photo.';
+      photoStatus.setAttribute('data-state', 'error');
+      photoInput.value = '';
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      photoStatus.textContent = 'That photo is too large — please choose one under 5 MB.';
+      photoStatus.setAttribute('data-state', 'error');
+      photoInput.value = '';
+      return;
+    }
+
+    photoStatus.textContent = '';
+    photoStatus.removeAttribute('data-state');
+    const reader = new FileReader();
+    reader.onload = () => {
+      selectedPhotoDataUrl = reader.result;
+      if (photoPreviewImg) photoPreviewImg.src = selectedPhotoDataUrl;
+      if (photoPreview) photoPreview.hidden = false;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  photoRemoveBtn?.addEventListener('click', clearPhoto);
+
   // Booking form submit
   const form = document.getElementById('booking-form');
   const statusEl = document.getElementById('form-status');
@@ -250,6 +339,7 @@
 
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
+    if (selectedPhotoDataUrl) payload.photo = selectedPhotoDataUrl;
 
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -271,6 +361,7 @@
 
       if (res.ok && data.ok) {
         form.reset();
+        clearPhoto();
         statusEl.textContent = `Thanks! Your request (#${data.id}) was received — our dispatch team will call you shortly to confirm.`;
         statusEl.setAttribute('data-state', 'success');
         if (typeof window.gtag === 'function') {
