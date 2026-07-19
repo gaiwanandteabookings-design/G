@@ -1,6 +1,7 @@
 const { invoiceNumber, computeTotals, formatMoney } = require('../invoiceUtils');
 const { PHONE_DISPLAY, PHONE_TEL, EMAIL } = require('./layout');
 const { INVOICE_TERMS } = require('../content/invoiceTerms');
+const { escapeHtml } = require('../htmlUtils');
 
 function buildInvoiceView(invoice) {
   const num = invoiceNumber(invoice.id);
@@ -16,7 +17,7 @@ function buildInvoiceView(invoice) {
     .map(
       (item) => `
         <tr>
-          <td>${item.description}</td>
+          <td>${escapeHtml(item.description)}</td>
           <td class="num">${item.qty}</td>
           <td class="num">${formatMoney(item.unitPrice)}</td>
           <td class="num">${formatMoney(item.qty * item.unitPrice)}</td>
@@ -32,7 +33,7 @@ function buildInvoiceView(invoice) {
     ? `
         <div class="invoice-signed">
           <p class="label">Accepted</p>
-          <p>Signed by <strong>${invoice.signed_name}</strong> on ${new Date(invoice.signed_at).toLocaleDateString('en-US', {
+          <p>Signed by <strong>${escapeHtml(invoice.signed_name)}</strong> on ${new Date(invoice.signed_at).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -70,10 +71,10 @@ function buildInvoiceView(invoice) {
 
         <div class="invoice-bill-to">
           <p class="label">Bill To</p>
-          <p class="name">${invoice.customer_name}</p>
-          ${invoice.customer_address ? `<p>${invoice.customer_address}</p>` : ''}
-          ${invoice.customer_phone ? `<p>${invoice.customer_phone}</p>` : ''}
-          ${invoice.customer_email ? `<p>${invoice.customer_email}</p>` : ''}
+          <p class="name">${escapeHtml(invoice.customer_name)}</p>
+          ${invoice.customer_address ? `<p>${escapeHtml(invoice.customer_address)}</p>` : ''}
+          ${invoice.customer_phone ? `<p>${escapeHtml(invoice.customer_phone)}</p>` : ''}
+          ${invoice.customer_email ? `<p>${escapeHtml(invoice.customer_email)}</p>` : ''}
         </div>
 
         <table class="invoice-table">
@@ -89,7 +90,7 @@ function buildInvoiceView(invoice) {
           <div class="invoice-total-due"><span>Total Due</span><span>${formatMoney(total)}</span></div>
         </div>
 
-        ${invoice.notes ? `<div class="invoice-notes"><p class="label">Notes</p><p>${invoice.notes}</p></div>` : ''}
+        ${invoice.notes ? `<div class="invoice-notes"><p class="label">Notes</p><p>${escapeHtml(invoice.notes)}</p></div>` : ''}
 
         <div class="invoice-terms">
           <p class="label">Terms &amp; Conditions</p>

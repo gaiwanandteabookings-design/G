@@ -215,6 +215,14 @@
   const passwordInput = document.getElementById('password-input');
   const gateError = document.getElementById('gate-error');
 
+  // Booking/invoice data comes from the public site (anyone can submit a
+  // booking) so it must be escaped before going into innerHTML here — otherwise
+  // a booking name/address/etc. like "<img src=x onerror=...>" would execute
+  // in the admin's browser session when this list renders.
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
   document.querySelectorAll('input[type="tel"]').forEach((input) => {
     input.setAttribute('inputmode', 'tel');
     input.addEventListener('input', () => {
@@ -340,12 +348,12 @@
     const rows = bookings.map((b) => `
       <tr>
         <td>#${b.id}<br><small>${fmtDate(b.created_at)}</small>${notifyBadge(b.notify_status) ? `<br>${notifyBadge(b.notify_status)}` : ''}</td>
-        <td>${b.name}<br><small>${b.business_name || ''}</small></td>
-        <td><a href="tel:${b.phone}">${b.phone}</a>${b.email ? `<br><a href="mailto:${b.email}">${b.email}</a>` : ''}</td>
-        <td>${b.address}</td>
-        <td>${b.equipment_type}${b.equipment_detail ? `<br><small>${b.equipment_detail}</small>` : ''}</td>
-        <td>${urgencyBadge(b.urgency)}<br><small>${b.preferred_date || ''} ${b.preferred_time || ''}</small></td>
-        <td style="max-width:200px;">${b.issue_description}</td>
+        <td>${esc(b.name)}<br><small>${esc(b.business_name || '')}</small></td>
+        <td><a href="tel:${esc(b.phone)}">${esc(b.phone)}</a>${b.email ? `<br><a href="mailto:${esc(b.email)}">${esc(b.email)}</a>` : ''}</td>
+        <td>${esc(b.address)}</td>
+        <td>${esc(b.equipment_type)}${b.equipment_detail ? `<br><small>${esc(b.equipment_detail)}</small>` : ''}</td>
+        <td>${urgencyBadge(b.urgency)}<br><small>${esc(b.preferred_date || '')} ${esc(b.preferred_time || '')}</small></td>
+        <td style="max-width:200px;">${esc(b.issue_description)}</td>
         <td>
           <select class="status" data-id="${b.id}">
             ${['new','contacted','scheduled','completed','cancelled'].map((s) => `<option value="${s}" ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}
@@ -404,9 +412,9 @@
     const rows = invoices.map((inv) => `
       <tr>
         <td>${inv.invoice_number}<br><small>${fmtDate(inv.created_at)}</small></td>
-        <td>${inv.customer_name}<br><small>${inv.customer_email || ''}</small></td>
+        <td>${esc(inv.customer_name)}<br><small>${esc(inv.customer_email || '')}</small></td>
         <td>${money(inv.totals.total)}</td>
-        <td><span class="badge ${inv.status}">${inv.status}</span>${inv.signed_name ? `<br><small>Signed by ${inv.signed_name}</small>` : ''}</td>
+        <td><span class="badge ${inv.status}">${inv.status}</span>${inv.signed_name ? `<br><small>Signed by ${esc(inv.signed_name)}</small>` : ''}</td>
         <td>
           <div class="row-actions">
             <a class="link-btn" href="/api/invoices/${inv.id}/pdf?token=${encodeURIComponent(getToken())}" target="_blank" rel="noopener">PDF</a>
