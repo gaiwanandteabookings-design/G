@@ -355,8 +355,8 @@ const bodyHtml = `
 
         <div class="form-row">
           <div class="form-field">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" autocomplete="email" maxlength="160" />
+            <label for="email">Email*</label>
+            <input type="email" id="email" name="email" autocomplete="email" maxlength="160" required />
           </div>
           <div class="form-field">
             <label for="businessName">Business Name</label>
@@ -436,6 +436,13 @@ const bodyHtml = `
           <label for="website">Leave this field empty</label>
           <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
         </div>
+
+        <label class="consent-field">
+          <input type="checkbox" id="consent" required />
+          <span>I agree to the <a href="/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> and
+          <a href="/terms-of-service" target="_blank" rel="noopener">Terms of Service</a>, and consent to
+          receive calls/texts about my request (msg &amp; data rates may apply).*</span>
+        </label>
 
         <button type="submit" class="btn btn-primary btn-lg" id="booking-submit">Request Repair</button>
         <p class="form-status" id="form-status" role="status" aria-live="polite"></p>

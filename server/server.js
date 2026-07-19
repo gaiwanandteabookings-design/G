@@ -233,7 +233,8 @@ function validateBookingPayload(body) {
   if (botField) errors.push('spam detected');
   if (!name) errors.push('Укажите имя');
   if (!phone || phone.replace(/[^\d]/g, '').length < 7) errors.push('Укажите корректный телефон');
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Некорректный email');
+  if (!email) errors.push('Укажите email');
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Некорректный email');
   if (!address) errors.push('Укажите адрес объекта');
   if (!EQUIPMENT_TYPES.has(equipmentType)) errors.push('Укажите тип оборудования');
   if (!URGENCY_LEVELS.has(urgency)) errors.push('Укажите срочность обращения');
