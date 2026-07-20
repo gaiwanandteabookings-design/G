@@ -21,6 +21,8 @@ const { areas } = require('./content/areas');
 const { privacyPolicy, termsOfService, accessibilityStatement } = require('./content/legal');
 const auth = require('./auth');
 const invoiceRoutes = require('./routes/invoices');
+const smsBot = require('./smsBot');
+const crypto = require('node:crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -193,6 +195,48 @@ function cleanString(value, maxLen) {
   return value.trim().slice(0, maxLen);
 }
 
+// The SMS booking bot is a public webhook (Twilio can't send an admin token), so it
+// gets its own per-phone-number limiter — a stuck/looping conversation or a prank
+// texter shouldn't be able to hammer the DB indefinitely.
+const smsMessagesByPhone = new Map();
+const SMS_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const SMS_RATE_LIMIT_MAX = 40;
+
+function isSmsRateLimited(phone) {
+  const now = Date.now();
+  const timestamps = (smsMessagesByPhone.get(phone) || []).filter((t) => now - t < SMS_RATE_LIMIT_WINDOW_MS);
+  timestamps.push(now);
+  smsMessagesByPhone.set(phone, timestamps);
+  return timestamps.length > SMS_RATE_LIMIT_MAX;
+}
+
+// Confirms a webhook request actually came from Twilio (not a spoofed POST to our public
+// endpoint) — Twilio signs every request with HMAC-SHA1 over the exact webhook URL plus
+// its sorted form params, keyed with the account's auth token. The webhook URL here MUST
+// match byte-for-byte what's configured in the Twilio console (see README).
+function verifyTwilioSignature(req) {
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const signature = req.headers['x-twilio-signature'];
+  if (!authToken || !signature) return false;
+
+  const url = `${SITE_URL}/api/sms/inbound`;
+  const sortedKeys = Object.keys(req.body).sort();
+  let data = url;
+  for (const key of sortedKeys) {
+    data += key + req.body[key];
+  }
+  const expected = crypto.createHmac('sha1', authToken).update(Buffer.from(data, 'utf-8')).digest('base64');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+}
+
+function escapeXml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB decoded
 
 // Accepts a "data:image/jpeg;base64,...." string from the client. Never trusts the
@@ -351,6 +395,36 @@ app.get('/api/admin/export', auth.requireAdmin, async (req, res) => {
 });
 
 app.use('/api/invoices', invoiceRoutes);
+
+// Twilio webhook target for the SMS booking bot — a customer texts the business number,
+// this walks them through the same questions as the booking form/chat widget, one text
+// at a time, and creates a real booking at the end. Configure this exact URL
+// (SITE_URL + /api/sms/inbound) as the "A MESSAGE COMES IN" webhook on the Twilio number.
+app.post('/api/sms/inbound', express.urlencoded({ extended: false, limit: '20kb' }), async (req, res) => {
+  const from = cleanString(req.body?.From, 40);
+  const bodyText = typeof req.body?.Body === 'string' ? req.body.Body : '';
+
+  if (!verifyTwilioSignature(req)) {
+    return res.status(403).type('text/plain').send('Forbidden');
+  }
+  if (!from) {
+    return res.status(400).type('text/plain').send('Bad Request');
+  }
+
+  let reply;
+  if (isSmsRateLimited(from)) {
+    reply = "You've sent a lot of messages — please call us directly instead: " + PHONE_DISPLAY;
+  } else {
+    try {
+      reply = await smsBot.handleMessage(from, bodyText);
+    } catch (err) {
+      console.error('[sms] Ошибка обработки входящего сообщения:', err);
+      reply = `Sorry, something went wrong on our end — please call us directly at ${PHONE_DISPLAY}.`;
+    }
+  }
+
+  res.type('text/xml').send(`<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escapeXml(reply)}</Message></Response>`);
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, mailConfigured });
