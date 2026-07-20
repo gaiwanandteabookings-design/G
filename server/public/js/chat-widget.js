@@ -9,7 +9,33 @@
 
   const equipmentDataEl = document.getElementById('equipment-data');
   const equipmentCategories = equipmentDataEl ? JSON.parse(equipmentDataEl.textContent) : [];
+  const pricingDataEl = document.getElementById('pricing-data');
+  const pricingData = pricingDataEl ? JSON.parse(pricingDataEl.textContent) : {};
   const OTHER_VALUE = '__other__';
+
+  // Maps the short equipment-type slugs used in this chat to the pricing-guide slugs
+  // used on /pricing/<slug>/ — the two content files were built independently and use
+  // different naming, so they need a lookup rather than matching directly.
+  const PRICING_SLUG_MAP = {
+    refrigeration: 'commercial-refrigeration-repair',
+    hvac: 'commercial-hvac-ac-repair',
+    'ice-machine': 'commercial-ice-machine-repair',
+    'kitchen-equipment': 'commercial-kitchen-equipment-repair',
+    mixer: 'commercial-mixer-repair',
+    'exhaust-hood': 'commercial-exhaust-hood-repair',
+  };
+
+  function showPriceEstimate(equipmentType) {
+    const slug = PRICING_SLUG_MAP[equipmentType];
+    const info = slug && pricingData[slug];
+    if (!info || !info.items || !info.items.length) return;
+    const lowEnd = info.items[0].range.split('–')[0];
+    const highEnd = info.items[info.items.length - 1].range.split('–').pop();
+    addMsg(
+      `Just so you know what to expect: our service call fee starts at ${info.serviceCallFee}, and most repairs for this type of equipment run ${lowEnd}–${highEnd} depending on the issue and parts needed. You'll always get a firm flat-rate quote after a tech diagnoses it on-site — never a surprise bill.`,
+      'bot'
+    );
+  }
 
   const STEPS = [
     {
@@ -176,6 +202,7 @@
         answers[step.key] = opt.value;
         addMsg(opt.label, 'user');
         if (step.key === 'equipmentType') {
+          showPriceEstimate(opt.value);
           renderEquipmentDetailStep(opt.value);
         } else {
           stepIndex += 1;
