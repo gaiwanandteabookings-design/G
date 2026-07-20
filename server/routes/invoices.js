@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db');
 const auth = require('../auth');
 const { buildInvoicePdf } = require('../pdf');
-const { sendInvoiceEmail } = require('../mailer');
+const { sendInvoiceEmail, sendReviewRequest } = require('../mailer');
 const { invoiceNumber, computeTotals } = require('../invoiceUtils');
 const { SITE_URL } = require('../views/layout');
 
@@ -125,6 +125,12 @@ router.patch('/:id/status', async (req, res) => {
   }
   const updated = await db.updateInvoiceStatus(id, status);
   if (!updated) return res.status(404).json({ ok: false, error: 'Invoice not found' });
+
+  if (status === 'paid') {
+    const invoice = await db.getInvoice(id);
+    if (invoice) sendReviewRequest(invoice).catch(() => {});
+  }
+
   res.json({ ok: true });
 });
 

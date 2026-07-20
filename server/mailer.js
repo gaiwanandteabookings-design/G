@@ -181,4 +181,40 @@ async function sendInvoiceEmail(invoice, pdfBuffer, viewUrl) {
   });
 }
 
-module.exports = { notifyNewBooking, sendBookingConfirmation, sendInvoiceEmail, mailConfigured };
+// Sent once, right when an invoice is marked paid — that's the natural moment to ask,
+// while the good experience is still fresh. No-op if GOOGLE_REVIEW_URL isn't set yet
+// (e.g. before the Google Business Profile is approved).
+async function sendReviewRequest(invoice) {
+  if (!invoice.customer_email || !process.env.GOOGLE_REVIEW_URL) return;
+
+  const reviewUrl = process.env.GOOGLE_REVIEW_URL;
+  const firstName = (invoice.customer_name || '').split(' ')[0] || 'there';
+
+  const lines = [
+    `Hi ${firstName},`,
+    ``,
+    `Thanks for choosing ProFix305! We hope everything is running smoothly now.`,
+    ``,
+    `If you have a minute, a quick Google review helps us a lot — and helps other South Florida businesses find us too: ${reviewUrl}`,
+    ``,
+    `— ProFix305`,
+  ];
+
+  const html = wrapEmail({
+    eyebrow: 'Quick Favor',
+    heading: `Thanks for choosing ProFix305, ${escapeHtml(firstName)}!`,
+    intro: `We hope everything is running smoothly. If you have a minute, a quick Google review helps us a lot — and helps other South Florida businesses find us too.`,
+    ctaLabel: 'Leave a Google Review',
+    ctaUrl: reviewUrl,
+  });
+
+  return send({
+    to: invoice.customer_email,
+    from: parseFrom(process.env.FROM_EMAIL),
+    subject: `How did we do? — ProFix305`,
+    text: lines.join('\n'),
+    html,
+  });
+}
+
+module.exports = { notifyNewBooking, sendBookingConfirmation, sendInvoiceEmail, sendReviewRequest, mailConfigured };
