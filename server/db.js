@@ -70,7 +70,39 @@ const ready = (async () => {
       FOREIGN KEY (booking_id) REFERENCES bookings (id)
     )
   `);
+
+  // Tracks an in-progress SMS conversation per phone number (the SMS booking bot) —
+  // stored in the DB rather than in-memory so an in-progress text conversation survives
+  // a redeploy instead of leaving the customer stuck mid-conversation.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS sms_sessions (
+      phone TEXT PRIMARY KEY,
+      step INTEGER NOT NULL DEFAULT 0,
+      answers TEXT NOT NULL DEFAULT '{}',
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
 })();
+
+async function getSmsSession(phone) {
+  const { rows } = await db.execute({ sql: 'SELECT * FROM sms_sessions WHERE phone = ?', args: [phone] });
+  if (!rows[0]) return null;
+  return { step: rows[0].step, answers: JSON.parse(rows[0].answers) };
+}
+
+async function saveSmsSession(phone, session) {
+  await db.execute({
+    sql: `
+      INSERT INTO sms_sessions (phone, step, answers, updated_at) VALUES (?, ?, ?, datetime('now'))
+      ON CONFLICT(phone) DO UPDATE SET step = excluded.step, answers = excluded.answers, updated_at = excluded.updated_at
+    `,
+    args: [phone, session.step, JSON.stringify(session.answers)],
+  });
+}
+
+async function clearSmsSession(phone) {
+  await db.execute({ sql: 'DELETE FROM sms_sessions WHERE phone = ?', args: [phone] });
+}
 
 async function insertBooking(b) {
   const result = await db.execute({
@@ -222,4 +254,7 @@ module.exports = {
   updateInvoiceStatus,
   signInvoice,
   exportAllData,
+  getSmsSession,
+  saveSmsSession,
+  clearSmsSession,
 };

@@ -220,6 +220,28 @@ on almost any Node host. Rough checklist to take it from "runs on my machine" to
      should match it (or be a verified alias) — most providers reject mail sent "from" an
      address they don't recognize as yours.
 
+## SMS booking bot (Twilio) — optional
+
+Lets a customer text your business number and get walked through the same questions as
+the booking form — equipment type, urgency, issue, name, email, address — one text at a
+time. A real booking is created at the end, visible in `/admin.html` exactly like a
+web/chat submission. This is a **reply-only** bot: it only ever responds to someone who
+texted first, so it's not unsolicited marketing (no TCPA consent issue).
+
+Setup:
+1. Sign up at [twilio.com](https://www.twilio.com), buy a number with SMS capability (or
+   port/forward your existing business number to Twilio — check their docs for that).
+2. Console → Account → API keys & tokens → copy the **Account SID** and **Auth Token**.
+3. On the phone number's configuration page → under "A MESSAGE COMES IN" → set the
+   webhook to `https://www.profix305.com/api/sms/inbound`, method **HTTP POST**. This URL
+   must match exactly (protocol, `www`, no trailing slash) — it's used to verify that
+   incoming requests really came from Twilio, not a spoofed request.
+4. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER` in Render's
+   Environment tab.
+
+Without `TWILIO_AUTH_TOKEN` set, the webhook rejects every request (signature can never
+verify) — so this is safe to leave unconfigured until you're ready.
+
 ## SEO — what actually moves rankings (read this before asking "why aren't we #1")
 
 The site's code can only do part of the job. Naming and on-page content have a small
