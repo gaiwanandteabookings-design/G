@@ -91,15 +91,20 @@ const meta = {
 };
 
 const serviceCards = services
-  .map(
-    (s) => `
-        <article class="card service-card">
+  .map((s) => {
+    // The cleaning/maintenance card gets its own green "fresh" accent + NEW badge —
+    // it's the one recurring-revenue offer among six repair services, and the visual
+    // break is what makes visitors notice it exists at all.
+    const isCleaning = s.slug === 'commercial-equipment-cleaning-maintenance';
+    return `
+        <article class="card service-card${isCleaning ? ' service-card--cleaning' : ''}">
+          ${isCleaning ? '<span class="card-badge">NEW — Plans Available</span>' : ''}
           <div class="card-icon">${renderServiceIcon(s.slug)}</div>
           <h3>${s.cardTitle}</h3>
           <p>${s.cardBlurb}</p>
           <a class="card-link" href="/miami/${s.slug}/">Learn more →</a>
-        </article>`
-  )
+        </article>`;
+  })
   .join('');
 
 const equipmentTabsHtml = equipmentCategories
