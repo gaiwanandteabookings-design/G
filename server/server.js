@@ -57,10 +57,18 @@ app.use(helmet({
 }));
 app.use(compression());
 
+// One canonical host in production: force HTTPS AND redirect every other hostname the
+// app answers on (bare profix305.com, the old *.onrender.com address) to it. Without
+// this, search engines see full duplicate copies of the site on multiple hosts and
+// split ranking signals between them — canonical tags alone only partially mitigate that.
+const CANONICAL_HOST = 'www.profix305.com';
 if (IS_PRODUCTION) {
   app.use((req, res, next) => {
-    if (req.secure || req.get('x-forwarded-proto') === 'https') return next();
-    res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
+    const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+    if (!isHttps || req.headers.host !== CANONICAL_HOST) {
+      return res.redirect(301, `https://${CANONICAL_HOST}${req.originalUrl}`);
+    }
+    next();
   });
 }
 
