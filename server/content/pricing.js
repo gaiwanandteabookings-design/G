@@ -88,6 +88,21 @@ const pricing = {
       'Whether the repair needs to happen ahead of a scheduled health/fire inspection',
     ],
   },
+  'commercial-equipment-cleaning-maintenance': {
+    serviceCallFee: '$89–$175',
+    items: [
+      { label: 'Ice machine deep cleaning & sanitation', range: '$150–$350' },
+      { label: 'Condenser / evaporator coil cleaning (per unit)', range: '$120–$300' },
+      { label: 'Walk-in drain line clearing & gasket service', range: '$100–$250' },
+      { label: 'Quarterly preventive-maintenance plan (per visit)', range: '$200–$600' },
+    ],
+    factors: [
+      'Number of units covered in a single visit — bundling several units is cheaper per unit',
+      'How long since the last professional cleaning (heavy scale/buildup takes longer)',
+      'One-time deep clean vs. recurring plan pricing (plans cost less per visit)',
+      'Air-cooled vs. water-cooled equipment',
+    ],
+  },
 };
 
 module.exports = { pricing };
