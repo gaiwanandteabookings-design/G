@@ -386,6 +386,37 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--color-cyan-400);
   transform: scale(1.06);
 }
+
+/* Cleaning & maintenance card — green "fresh" accent to stand apart from repair cards */
+.service-card--cleaning {
+  position: relative;
+  border: 1.5px solid rgba(34, 197, 130, 0.45);
+  background: linear-gradient(180deg, rgba(34, 197, 130, 0.06), var(--color-white) 55%);
+}
+.service-card--cleaning .card-icon {
+  background: rgba(34, 197, 130, 0.14);
+  color: #16915f;
+}
+.service-card--cleaning:hover .card-icon {
+  background: #16915f;
+  color: #ffffff;
+}
+.service-card--cleaning .card-link { color: #16915f; }
+.service-card--cleaning .card-link:hover { color: #0f7a4e; }
+.card-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #16915f;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 .service-card h3 { font-size: 1.08rem; }
 .service-card p { font-size: 0.92rem; margin-bottom: 0; }
 
