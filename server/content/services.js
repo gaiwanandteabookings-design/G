@@ -219,6 +219,46 @@ const services = [
       },
     ],
   },
+  {
+    slug: 'commercial-equipment-cleaning-maintenance',
+    serviceName: 'Equipment Cleaning & Preventive Maintenance',
+    icon: '✨',
+    cardTitle: 'Cleaning & Preventive Maintenance',
+    cardBlurb: 'Ice machine sanitation, coil & condenser cleaning, scheduled maintenance plans — stop breakdowns before they happen.',
+    pageTitle: 'Commercial Equipment Cleaning & Preventive Maintenance in Miami | ProFix305',
+    metaDescription: 'Commercial kitchen equipment cleaning and preventive maintenance across Miami-Dade, Broward, and Palm Beach. Ice machine cleaning & sanitation, refrigeration coil cleaning, condenser cleaning, scheduled maintenance plans for restaurants and food service.',
+    keywords: 'ice machine cleaning Miami, commercial refrigeration coil cleaning, condenser cleaning service, restaurant equipment cleaning Miami, preventive maintenance commercial kitchen, ice machine sanitation service',
+    heroEyebrow: 'Cleaning & Maintenance',
+    heroHeadline: 'Equipment Cleaning & Preventive Maintenance',
+    heroSub: 'Most emergency breakdowns we see started as a dirty condenser coil, a scaled-up ice machine, or a clogged drain line that nobody touched for a year. Regular professional cleaning keeps equipment efficient, extends its life, keeps health inspectors happy — and costs a fraction of an emergency repair. ProFix305 offers one-time deep cleaning and scheduled maintenance plans across South Florida.',
+    bullets: [
+      'Ice machine deep cleaning, descaling & sanitation — health-code critical and often overlooked',
+      'Refrigeration condenser & evaporator coil cleaning — dirty coils are the #1 cause of compressor failure',
+      'Walk-in cooler/freezer drain line clearing and gasket care',
+      'HVAC coil and blower cleaning for better airflow and lower power bills',
+      'Kitchen equipment maintenance — burners, pilots, calibration, lubrication',
+      'Scheduled preventive-maintenance plans (monthly / quarterly) with documented service records',
+      'Pre-inspection tune-ups before health or fire inspections',
+    ],
+    faqs: [
+      {
+        q: 'How often should a commercial ice machine be cleaned in Florida?',
+        a: 'Manufacturers and health codes generally call for a full cleaning and sanitation at least every 6 months — and in South Florida\'s climate, high-volume machines often need it quarterly. Scale and slime buildup is one of the most common health-inspection violations for bars and restaurants.',
+      },
+      {
+        q: 'Why does condenser coil cleaning matter?',
+        a: 'A dirty condenser makes the compressor run hotter and longer for the same cooling — raising power bills, shortening compressor life, and eventually causing the exact emergency breakdown that costs 10x more than a cleaning. It\'s the single highest-value maintenance task for refrigeration equipment.',
+      },
+      {
+        q: 'Do you offer recurring maintenance plans?',
+        a: 'Yes — we set up monthly or quarterly preventive-maintenance visits tailored to your equipment list, with documented service records you can show inspectors, insurers, and landlords. Plan customers also get priority dispatch on emergency calls.',
+      },
+      {
+        q: 'Is exhaust hood cleaning included?',
+        a: 'We service and repair exhaust hood systems (fans, belts, airflow issues) and can help you stay on your fire-code cleaning schedule. For certified NFPA 96 grease-duct deep cleaning we\'ll point you to a certified specialist if your inspection requires one — and handle everything mechanical around it.',
+      },
+    ],
+  },
 ];
 
 module.exports = { services };

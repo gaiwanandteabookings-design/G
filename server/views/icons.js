@@ -41,6 +41,12 @@ const ICON_PATHS = {
     <path d="M9.8 10c-.3-2.6.7-4.3 2.2-4.3s2.5 1.7 2.2 4.3" stroke-width="1.4"/>
     <line x1="12" y1="2.3" x2="12" y2="5.9" stroke-width="1.4"/>`,
 
+  // Sparkles — universal "clean/fresh" symbol.
+  'commercial-equipment-cleaning-maintenance': `
+    <path d="M12 3.5l1.7 4.6 4.6 1.7-4.6 1.7-1.7 4.6-1.7-4.6-4.6-1.7 4.6-1.7z" stroke-linejoin="round"/>
+    <path d="M18.8 14.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M5.4 16.6l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" stroke-width="1.3" stroke-linejoin="round"/>`,
+
   // Hood with venting arrow.
   'commercial-exhaust-hood-repair': `
     <path d="M4.3 9.4L7 4.4h10l2.7 5H4.3z" stroke-linejoin="round"/>
