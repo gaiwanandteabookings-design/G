@@ -371,8 +371,23 @@ const bodyHtml = `
         </div>
 
         <div class="form-field">
-          <label for="address">Service Address*</label>
-          <input type="text" id="address" name="address" autocomplete="street-address" maxlength="240" required />
+          <label for="address">Street Address*</label>
+          <input type="text" id="address" name="address" autocomplete="address-line1" maxlength="200" placeholder="123 Main St" required />
+        </div>
+
+        <div class="form-row form-row--addr">
+          <div class="form-field">
+            <label for="city">City*</label>
+            <input type="text" id="city" name="city" autocomplete="address-level2" maxlength="80" required />
+          </div>
+          <div class="form-field">
+            <label for="state">State*</label>
+            <input type="text" id="state" name="state" autocomplete="address-level1" maxlength="2" pattern="[A-Za-z]{2}" value="FL" style="text-transform:uppercase" required />
+          </div>
+          <div class="form-field">
+            <label for="zip">ZIP*</label>
+            <input type="text" id="zip" name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10" pattern="\d{5}(-\d{4})?" placeholder="33101" required />
+          </div>
         </div>
 
         <div class="form-row">

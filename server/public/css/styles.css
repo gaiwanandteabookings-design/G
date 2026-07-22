@@ -580,6 +580,7 @@ button { font-family: inherit; cursor: pointer; }
   box-shadow: var(--shadow-card-hover);
 }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-row--addr { grid-template-columns: 2fr 0.7fr 1fr; }
 .form-field { margin-bottom: 16px; }
 .form-field label {
   display: block;
