@@ -203,9 +203,12 @@ function cleanString(value, maxLen) {
   return value.trim().slice(0, maxLen);
 }
 
-// A real customer can't fill name/phone/email/address/description in under this
-// long — anything faster came from a script that auto-filled the form.
-const MIN_FORM_FILL_MS = 3000;
+// Catches submissions that arrive faster than any human interaction could —
+// kept deliberately short (not the usual 3s+ seen in anti-bot guides) because a
+// real visitor using the browser's autofill can legitimately fill the whole form
+// and tap submit in a couple of seconds; this only needs to catch sub-second,
+// no-page-interaction script submissions, not merely fast humans.
+const MIN_FORM_FILL_MS = 1200;
 
 // Cold-outreach spam ("we can build you an app", "improve your SEO", etc.) submitted
 // through the repair-request form itself, disguised as a booking. None of these
