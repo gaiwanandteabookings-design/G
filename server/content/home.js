@@ -442,6 +442,7 @@ const bodyHtml = `
           <label for="website">Leave this field empty</label>
           <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
         </div>
+        <input type="hidden" id="form-ts" name="ts" value="" />
 
         <label class="consent-field">
           <input type="checkbox" id="consent" required />

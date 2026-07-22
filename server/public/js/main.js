@@ -1,6 +1,12 @@
 (function () {
   document.getElementById('year').textContent = new Date().getFullYear();
 
+  // Anti-spam: records when the form actually rendered so the server can reject
+  // submissions that arrive suspiciously fast (a real person can't fill out
+  // name/phone/email/address/description in under a couple of seconds).
+  const formTsField = document.getElementById('form-ts');
+  if (formTsField) formTsField.value = String(Date.now());
+
   // Live South Florida (Eastern) clock in the hero status card — real data, not staged.
   const localTimeEl = document.getElementById('local-time');
   if (localTimeEl) {
