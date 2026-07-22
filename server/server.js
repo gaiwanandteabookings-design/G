@@ -203,6 +203,26 @@ function cleanString(value, maxLen) {
   return value.trim().slice(0, maxLen);
 }
 
+// A real customer can't fill name/phone/email/address/description in under this
+// long — anything faster came from a script that auto-filled the form.
+const MIN_FORM_FILL_MS = 3000;
+
+// Cold-outreach spam ("we can build you an app", "improve your SEO", etc.) submitted
+// through the repair-request form itself, disguised as a booking. None of these
+// phrases have any legitimate reason to appear in a description of broken equipment.
+const SPAM_KEYWORDS = [
+  'mobile app', 'quick chat', 'seo service', 'search engine optimization', 'digital marketing',
+  'increase your traffic', 'increase your ranking', 'web design service', 'backlink', 'guest post',
+  'link building', 'social media management', 'grow your business', 'boost your sales',
+  'would you be open', "let's connect", 'partner with you', 'business proposal',
+  'collaboration opportunity', 'unsubscribe', 'this is not spam',
+];
+
+function containsSpamKeywords(...texts) {
+  const combined = texts.join(' ').toLowerCase();
+  return SPAM_KEYWORDS.some((kw) => combined.includes(kw));
+}
+
 // The SMS booking bot is a public webhook (Twilio can't send an admin token), so it
 // gets its own per-phone-number limiter — a stuck/looping conversation or a prank
 // texter shouldn't be able to hammer the DB indefinitely.
@@ -288,8 +308,13 @@ function validateBookingPayload(body) {
   const preferredDate = cleanString(body.preferredDate, 20);
   const preferredTime = cleanString(body.preferredTime, 20);
   const botField = cleanString(body.website, 200); // honeypot
+  const renderedAt = Number(body.ts);
 
   if (botField) errors.push('spam detected');
+  if (Number.isFinite(renderedAt) && renderedAt > 0 && Date.now() - renderedAt < MIN_FORM_FILL_MS) {
+    errors.push('spam detected');
+  }
+  if (containsSpamKeywords(issueDescription, businessName, name)) errors.push('spam detected');
   if (!name) errors.push('Укажите имя');
   if (!phone || phone.replace(/[^\d]/g, '').length < 7) errors.push('Укажите корректный телефон');
   if (!email) errors.push('Укажите email');
