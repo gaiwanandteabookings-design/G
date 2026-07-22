@@ -63,6 +63,16 @@
   .notify-badge.notify-failed { color:#b3261e; }
   select.status { padding:5px 8px; border-radius:6px; border:1px solid var(--line); font-size:.8rem; }
   .booking-thumb { display:block; width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid var(--line); margin-top:6px; }
+  /* The table's auto column-width algorithm otherwise squeezes this column down to
+     almost nothing since its text can wrap to any width — pin a sane minimum so the
+     clamped and expanded states both actually have room to breathe. */
+  table th:nth-child(7), table td:nth-child(7) { min-width: 200px; }
+  .issue-text {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
+    overflow: hidden; max-width: 220px; word-break: break-word; cursor: pointer;
+  }
+  .issue-text.expanded { display: block; overflow: visible; max-width: 420px; }
+  .issue-more { display:block; font-size:.75rem; color: var(--cyan); font-weight:600; margin-top:2px; cursor:pointer; }
   header .link-btn { background:#fff; border-color:#fff; }
   .empty { text-align:center; padding: 60px 20px; color: var(--slate); }
   .row-actions { display:flex; gap:6px; flex-wrap: wrap; }
@@ -386,7 +396,11 @@
         <td>${esc(b.address)}</td>
         <td>${esc(b.equipment_type)}${b.equipment_detail ? `<br><small>${esc(b.equipment_detail)}</small>` : ''}</td>
         <td>${urgencyBadge(b.urgency)}<br><small>${esc(b.preferred_date || '')} ${esc(b.preferred_time || '')}</small></td>
-        <td style="max-width:200px;">${esc(b.issue_description)}${b.has_photo ? `<br><a href="/api/bookings/${b.id}/photo?token=${encodeURIComponent(getToken())}" target="_blank" rel="noopener"><img class="booking-thumb" src="/api/bookings/${b.id}/photo?token=${encodeURIComponent(getToken())}" alt="Photo of the issue" loading="lazy" /></a>` : ''}</td>
+        <td>
+          <span class="issue-text">${esc(b.issue_description)}</span>
+          <span class="issue-more">Show more</span>
+          ${b.has_photo ? `<a href="/api/bookings/${b.id}/photo?token=${encodeURIComponent(getToken())}" target="_blank" rel="noopener"><img class="booking-thumb" src="/api/bookings/${b.id}/photo?token=${encodeURIComponent(getToken())}" alt="Photo of the issue" loading="lazy" /></a>` : ''}
+        </td>
         <td>
           <select class="status" data-id="${b.id}">
             ${['new','contacted','scheduled','completed','cancelled'].map((s) => `<option value="${s}" ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}
@@ -404,6 +418,24 @@
         <tbody>${rows}</tbody>
       </table>
     `;
+
+    // Long issue descriptions (spam or otherwise) get clamped to 3 lines so a single
+    // row can't stretch the whole table — "Show more" only appears if the text
+    // actually overflows, and toggles the clamp off/on for that row.
+    wrap.querySelectorAll('.issue-text').forEach((el) => {
+      const moreBtn = el.nextElementSibling;
+      if (!moreBtn || !moreBtn.classList.contains('issue-more')) return;
+      if (el.scrollHeight <= el.clientHeight + 1) {
+        moreBtn.style.display = 'none';
+        return;
+      }
+      const toggle = () => {
+        const expanded = el.classList.toggle('expanded');
+        moreBtn.textContent = expanded ? 'Show less' : 'Show more';
+      };
+      moreBtn.addEventListener('click', toggle);
+      el.addEventListener('click', toggle);
+    });
 
     wrap.querySelectorAll('.status').forEach((sel) => {
       sel.addEventListener('change', async () => {
