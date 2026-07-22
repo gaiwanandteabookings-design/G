@@ -194,9 +194,9 @@ on almost any Node host. Rough checklist to take it from "runs on my machine" to
 3. **Environment variables to set on the host** (mirror of `.env.example`):
    `PORT`, `NODE_ENV=production`, `TRUST_PROXY=true` (if behind Render/Railway/nginx),
    `ADMIN_USERNAME` + `ADMIN_PASSWORD` (change from the `1234` dev default — see the
-   security note above), `SMTP_*` + `NOTIFY_EMAIL` + `FROM_EMAIL` (needed for booking
-   emails and for sending invoices), and `GA_MEASUREMENT_ID` (if you set up Google
-   Analytics — see below).
+   security note above), `SENDGRID_API_KEY` + `NOTIFY_EMAIL` + `FROM_EMAIL` (needed for
+   booking emails and for sending invoices — see the Domain Authentication note below),
+   and `GA_MEASUREMENT_ID` (if you set up Google Analytics — see below).
 4. **Domain & DNS.** Buy the domain (e.g. from Namecheap, Google Domains successor,
    Cloudflare), then point it at your host: usually an `A` record to the host's IP, or a
    `CNAME` to the hostname the platform gives you (Render/Railway/Fly all document this).
@@ -208,17 +208,24 @@ on almost any Node host. Rough checklist to take it from "runs on my machine" to
 6. **Google Search Console.** Verify your domain at search.google.com/search-console,
    then submit `https://yourdomain.com/sitemap.xml` so all pages get crawled quickly
    instead of waiting for Google to find them on its own.
-7. **SMTP for your new business email.** Once you have a real email address, get SMTP
-   credentials for it and set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` — this is
-   what powers booking notifications and invoice sending. Common setups:
-   - **Google Workspace / Gmail:** `smtp.gmail.com`, port `587`. You need an **App
-     Password** (myaccount.google.com/apppasswords), not your normal login password —
-     Gmail blocks plain-password SMTP logins by default.
-   - **Zoho Mail:** `smtp.zoho.com`, port `587`.
-   - **Microsoft 365 / Outlook:** `smtp.office365.com`, port `587`.
-   - Whatever provider you pick, `SMTP_USER` is the full email address and `FROM_EMAIL`
-     should match it (or be a verified alias) — most providers reject mail sent "from" an
-     address they don't recognize as yours.
+7. **Email deliverability (SendGrid Domain Authentication).** Booking notifications and
+   invoices send through SendGrid's API (see `.env.example` for the full setup). The
+   single most important step for landing in the inbox instead of spam is **Domain
+   Authentication**, not the quicker "Single Sender Verification" shortcut:
+   - SendGrid dashboard → Settings → Sender Authentication → **Authenticate Your
+     Domain** → enter your domain (e.g. `profix305.com`).
+   - SendGrid gives you 3 CNAME records — add them in your domain's DNS (Namecheap:
+     Advanced DNS). This lets SendGrid send mail that's SPF/DKIM-signed *as your own
+     domain*, instead of an address it doesn't actually control.
+   - Set `FROM_EMAIL` to an address on that same domain, e.g.
+     `"YourBusiness <notifications@yourdomain.com>"` — it doesn't need to be a real
+     inbox, just a name on the authenticated domain.
+   - **Why this matters:** sending "from" a `@gmail.com` (or any address on a domain
+     you don't control) through a third-party API like SendGrid almost always lands in
+     spam or gets rejected outright — Gmail's own SPF/DKIM records don't authorize
+     SendGrid's servers to send as `@gmail.com`, so receiving mail servers see it as
+     unverified/spoofed. Once `FROM_EMAIL` is on your authenticated domain, this
+     resolves itself.
 
 ## SMS booking bot (Twilio) — optional
 
