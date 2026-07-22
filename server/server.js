@@ -300,7 +300,24 @@ function validateBookingPayload(body) {
   const phone = cleanString(body.phone, 40);
   const email = cleanString(body.email, 160);
   const businessName = cleanString(body.businessName, 160);
-  const address = cleanString(body.address, 240);
+  const street = cleanString(body.address, 200);
+  const city = cleanString(body.city, 80);
+  const state = cleanString(body.state, 10);
+  const zip = cleanString(body.zip, 12);
+  // The main booking form sends street/city/state/zip as separate fields (so we can
+  // actually validate them); the chat widget and SMS bot still collect one free-text
+  // address per their conversational flow, so fall back to that when the structured
+  // fields are absent instead of forcing every intake channel to match.
+  const hasStructuredAddress = Boolean(city || state || zip);
+  let address = street;
+  if (hasStructuredAddress) {
+    if (!city) errors.push('Укажите город');
+    if (!/^[A-Za-z]{2}$/.test(state)) errors.push('Штат — 2 буквы, например FL');
+    if (!/^\d{5}(-\d{4})?$/.test(zip)) errors.push('Некорректный индекс (ZIP), нужно 5 цифр');
+    if (city && /^[A-Za-z]{2}$/.test(state) && /^\d{5}(-\d{4})?$/.test(zip)) {
+      address = `${street}, ${city}, ${state.toUpperCase()} ${zip}`;
+    }
+  }
   const equipmentType = cleanString(body.equipmentType, 40);
   const equipmentDetail = cleanString(body.equipmentDetail, 160);
   const issueDescription = cleanString(body.issueDescription, 2000);
